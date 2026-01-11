@@ -38,106 +38,304 @@
                 </div>
             </div>
             
-            <!-- 查询表单 -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>查询今日检查报告</h5>
-                </div>
-                <div class="card-body">
-                    <form method="get">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label asp-for="PatientId" class="form-label">住院号</label>
-                                <input asp-for="PatientId" class="form-control" placeholder="请输入住院号" />
-                            </div>
-                            <div class="col-md-4">
-                                <label asp-for="ExamId" class="form-label">检查号</label>
-                                <input asp-for="ExamId" class="form-control" placeholder="请输入检查号" />
-                            </div>
-                            <div class="col-md-4">
-                                <label asp-for="OutpatientId" class="form-label">门诊号</label>
-                                <input asp-for="OutpatientId" class="form-control" placeholder="请输入门诊号" />
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-primary me-2">查询</button>
-                            <a asp-page="./ReportsDashboard" class="btn btn-secondary">清空查询</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+
             
-            <!-- 报告列表 -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">今日检查报告列表</h5>
-                    <small class="text-muted">更新时间: @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</small>
-                </div>
-                <div class="card-body p-0">
-                    @if (Model.Reports.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-striped mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>报告ID</th>
-                                        <th>患者姓名</th>
-                                        <th>住院号</th>
-                                        <th>检查号</th>
-                                        <th>门诊号</th>
-                                        <th>检查类型</th>
-                                        <th>上传时间</th>
-                                        <th>状态</th>
-                                        <th>错误信息</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var report in Model.Reports)
+            <!-- 标签页导航 -->
+            <ul class="nav nav-tabs" id="reportTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab">今日检查患者</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">今日检查报告</button>
+                </li>
+            </ul>
+            
+            <!-- 标签页内容 -->
+            <div class="tab-content" id="reportTabContent">
+                <!-- 患者列表标签页 -->
+                <div class="tab-pane fade show active" id="patients" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>查询今日检查患者</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="get">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label asp-for="PatientIdForPatientList" class="form-label">住院号</label>
+                                        <input asp-for="PatientIdForPatientList" class="form-control" placeholder="请输入住院号" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="ExamIdForPatientList" class="form-label">检查号</label>
+                                        <input asp-for="ExamIdForPatientList" class="form-control" placeholder="请输入检查号" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="OutpatientIdForPatientList" class="form-label">门诊号</label>
+                                        <input asp-for="OutpatientIdForPatientList" class="form-control" placeholder="请输入门诊号" />
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary me-2">查询患者</button>
+                                    <a asp-page="./ReportsDashboard" class="btn btn-secondary">清空查询</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">今日检查患者列表</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (Model.TodayPatients.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>检查号</th>
+                                                <th>患者姓名</th>
+                                                <th>住院号</th>
+                                                <th>门诊号</th>
+                                                <th>检查类型</th>
+                                                <th>检查时间</th>
+                                                <th>检查状态</th>
+                                                <th>报告状态</th>
+                                                <th>错误信息</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var patient in Model.TodayPatients)
+                                            {
+                                                <tr>
+                                                    <td>@patient.ExamId</td>
+                                                    <td>@patient.PatientName</td>
+                                                    <td>@patient.PatientId</td>
+                                                    <td>@patient.OutpatientId</td>
+                                                    <td>@patient.ExamType</td>
+                                                    <td>@patient.ExamTime.ToString("HH:mm")</td>
+                                                    <td>
+                                                        @if (patient.ExamStatus == "已检查")
+                                                        {
+                                                            <span class="badge bg-success">@patient.ExamStatus</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-warning">@patient.ExamStatus</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (patient.ReportStatus == "解析成功")
+                                                        {
+                                                            <span class="badge bg-success">@patient.ReportStatus</span>
+                                                        }
+                                                        else if (patient.ReportStatus == "解析失败")
+                                                        {
+                                                            <span class="badge bg-danger">@patient.ReportStatus</span>
+                                                        }
+                                                        else if (patient.ReportStatus == "已上传")
+                                                        {
+                                                            <span class="badge bg-info">@patient.ReportStatus</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">@patient.ReportStatus</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(patient.ErrorMessage))
+                                                        {
+                                                            <span class="text-danger">@patient.ErrorMessage</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">-</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="fas fa-user-injured fa-3x text-muted mb-3"></i>
+                                    @if (Model.HasQueryParamsForPatients)
                                     {
-                                        <tr>
-                                            <td>@report.ReportId</td>
-                                            <td>@report.PatientName</td>
-                                            <td>@report.PatientId</td>
-                                            <td>@report.ExamId</td>
-                                            <td>@report.OutpatientId</td>
-                                            <td>@report.ExamType</td>
-                                            <td>@report.UploadTime.ToString("HH:mm:ss")</td>
-                                            <td>
-                                                @if (report.IsSuccessful)
-                                                {
-                                                    <span class="badge bg-success">成功</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-danger">失败</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (!string.IsNullOrEmpty(report.ErrorMessage))
-                                                {
-                                                    <span class="text-danger">@report.ErrorMessage</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-success">无错误</span>
-                                                }
-                                            </td>
-                                        </tr>
+                                        <h5 class="text-muted">未找到符合条件的患者</h5>
+                                        <p class="text-muted">没有找到匹配您查询条件的患者信息</p>
                                     }
-                                </tbody>
-                            </table>
+                                    else
+                                    {
+                                        <h5 class="text-muted">今日暂无患者安排</h5>
+                                        <p class="text-muted">今日尚未安排任何检查</p>
+                                    }
+                                </div>
+                            }
                         </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5">
-                            <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">暂无检查报告数据</h5>
-                            <p class="text-muted">今日尚未上传任何检查报告</p>
+                    </div>
+                </div>
+                
+                <!-- 报告列表标签页 -->
+                <div class="tab-pane fade" id="reports" role="tabpanel">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>查询今日检查报告</h5>
                         </div>
-                    }
+                        <div class="card-body">
+                            <form method="get">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label asp-for="PatientId" class="form-label">住院号</label>
+                                        <input asp-for="PatientId" class="form-control" placeholder="请输入住院号" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="ExamId" class="form-label">检查号</label>
+                                        <input asp-for="ExamId" class="form-control" placeholder="请输入检查号" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="OutpatientId" class="form-label">门诊号</label>
+                                        <input asp-for="OutpatientId" class="form-control" placeholder="请输入门诊号" />
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary me-2">查询报告</button>
+                                    <a asp-page="./ReportsDashboard" class="btn btn-secondary">清空查询</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">今日检查报告列表</h5>
+                            <small class="text-muted">更新时间: @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (Model.Reports.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>报告ID</th>
+                                                <th>患者姓名</th>
+                                                <th>住院号</th>
+                                                <th>检查号</th>
+                                                <th>门诊号</th>
+                                                <th>检查类型</th>
+                                                <th>上传时间</th>
+                                                <th>状态</th>
+                                                <th>错误信息</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var report in Model.Reports)
+                                            {
+                                                <tr>
+                                                    <td>@report.ReportId</td>
+                                                    <td>@report.PatientName</td>
+                                                    <td>@report.PatientId</td>
+                                                    <td>@report.ExamId</td>
+                                                    <td>@report.OutpatientId</td>
+                                                    <td>@report.ExamType</td>
+                                                    <td>@report.UploadTime.ToString("HH:mm:ss")</td>
+                                                    <td>
+                                                        @if (report.IsSuccessful)
+                                                        {
+                                                            <span class="badge bg-success">成功</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger">失败</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(report.ErrorMessage))
+                                                        {
+                                                            <span class="text-danger">@report.ErrorMessage</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-success">无错误</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
+                                    @if (Model.HasQueryParamsForReports)
+                                    {
+                                        <h5 class="text-muted">未找到符合条件的报告</h5>
+                                        <p class="text-muted">没有找到匹配您查询条件的检查报告</p>
+                                    }
+                                    else
+                                    {
+                                        <h5 class="text-muted">今日暂无检查报告</h5>
+                                        <p class="text-muted">今日尚未上传任何检查报告</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // 检查URL参数以确定应该激活哪个标签页
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // 检查是否有报告相关的查询参数
+        const hasReportParams = urlParams.get('PatientId') || 
+                              urlParams.get('ExamId') || 
+                              urlParams.get('OutpatientId');
+        
+        // 检查是否有患者相关的查询参数
+        const hasPatientParams = urlParams.get('PatientIdForPatientList') || 
+                               urlParams.get('ExamIdForPatientList') || 
+                               urlParams.get('OutpatientIdForPatientList');
+        
+        // 如果有报告查询参数，激活报告标签页
+        if (hasReportParams) {
+            activateTab('reports-tab', 'reports');
+        }
+        // 如果有患者查询参数，激活患者标签页
+        else if (hasPatientParams) {
+            activateTab('patients-tab', 'patients');
+        }
+        
+        // 为标签页按钮添加点击事件监听器，保存当前激活的标签页到localStorage
+        document.querySelectorAll('#reportTab button[data-bs-toggle="tab"]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('data-bs-target').substring(1); // 移除#号
+                localStorage.setItem('activeReportTab', targetId);
+            });
+        });
+        
+        // 通用的标签页激活函数
+        function activateTab(tabButtonId, tabPaneId) {
+            // 移除所有活动标签
+            document.querySelectorAll('#reportTab button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active', 'show');
+            });
+            
+            // 激活指定的标签和内容
+            document.getElementById(tabButtonId).classList.add('active');
+            document.getElementById(tabPaneId).classList.add('active', 'show');
+        }
+    });
+</script>
