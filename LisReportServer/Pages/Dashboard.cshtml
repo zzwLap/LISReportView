@@ -1,0 +1,74 @@
+@page
+@{
+    ViewData["Title"] = "仪表板";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>医院信息系统仪表板</h2>
+            <hr />
+            
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">欢迎回来！</h4>
+                    <p>您已成功登录到系统。</p>
+                    <hr />
+                    <p class="mb-0">
+                        用户名: <strong>@User.Identity.Name</strong><br />
+                        登录时间: <strong>@User.FindFirst("LoginTime")?.Value</strong><br />
+                        医院: <strong>@User.FindFirst("HospitalName")?.Value</strong>
+                    </p>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>系统功能</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">检验报告</h5>
+                                        <p class="card-text">查看和管理检验报告</p>
+                                        <a href="#" class="btn btn-primary">进入</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">患者管理</h5>
+                                        <p class="card-text">管理患者信息</p>
+                                        <a href="#" class="btn btn-primary">进入</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">系统设置</h5>
+                                        <p class="card-text">系统配置和权限管理</p>
+                                        <a href="#" class="btn btn-primary">进入</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-heading">未登录</h4>
+                    <p>您需要先登录才能访问此页面。</p>
+                    <hr />
+                    <a class="btn btn-primary" asp-page="/Login">前往登录</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

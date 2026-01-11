@@ -1,0 +1,15 @@
+@page
+@model LogoutModel
+@{
+    ViewData["Title"] = "登出";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>您已成功登出系统。</p>
+
+<script type="text/javascript">
+    // 延迟重定向到首页
+    setTimeout(function() {
+        window.location.href = '/';
+    }, 2000);
+</script>

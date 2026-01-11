@@ -1,0 +1,58 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "登录";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3>医院信息系统登录</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.HospitalName" class="control-label">医院名称</label>
+                            <input asp-for="Input.HospitalName" class="form-control" placeholder="请输入医院名称" />
+                            <span asp-validation-for="Input.HospitalName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.Username" class="control-label">用户名</label>
+                            <input asp-for="Input.Username" class="form-control" placeholder="请输入用户名" />
+                            <span asp-validation-for="Input.Username" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group mb-4">
+                            <label asp-for="Input.Password" class="control-label">密码</label>
+                            <input asp-for="Input.Password" type="password" class="form-control" placeholder="请输入密码" />
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input asp-for="Input.RememberMe" class="form-check-input" type="checkbox" />
+                                <label asp-for="Input.RememberMe" class="form-check-label">记住我</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-block">登录</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>请使用您的医院账户登录</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
