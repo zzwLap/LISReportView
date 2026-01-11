@@ -291,51 +291,60 @@
 </div>
 
 <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        // 检查URL参数以确定应该激活哪个标签页
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // 检查是否有报告相关的查询参数
-        const hasReportParams = urlParams.get('PatientId') || 
-                              urlParams.get('ExamId') || 
-                              urlParams.get('OutpatientId');
-        
-        // 检查是否有患者相关的查询参数
-        const hasPatientParams = urlParams.get('PatientIdForPatientList') || 
-                               urlParams.get('ExamIdForPatientList') || 
-                               urlParams.get('OutpatientIdForPatientList');
-        
-        // 如果有报告查询参数，激活报告标签页
-        if (hasReportParams) {
-            activateTab('reports-tab', 'reports');
-        }
-        // 如果有患者查询参数，激活患者标签页
-        else if (hasPatientParams) {
-            activateTab('patients-tab', 'patients');
-        }
-        
-        // 为标签页按钮添加点击事件监听器，保存当前激活的标签页到localStorage
-        document.querySelectorAll('#reportTab button[data-bs-toggle="tab"]').forEach(button => {
-            button.addEventListener('click', function(e) {
-                const targetId = this.getAttribute('data-bs-target').substring(1); // 移除#号
-                localStorage.setItem('activeReportTab', targetId);
-            });
+    // 保存当前激活的标签页到localStorage
+    document.querySelectorAll('#reportTab button[data-bs-toggle="tab"]').forEach(button => {
+        button.addEventListener('shown.bs.tab', function(e) {
+            const targetId = this.getAttribute('data-bs-target').substring(1); // 移除#号
+            localStorage.setItem('activeReportTab', targetId);
         });
-        
-        // 通用的标签页激活函数
-        function activateTab(tabButtonId, tabPaneId) {
-            // 移除所有活动标签
-            document.querySelectorAll('#reportTab button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.tab-pane').forEach(pane => {
-                pane.classList.remove('active', 'show');
-            });
-            
-            // 激活指定的标签和内容
-            document.getElementById(tabButtonId).classList.add('active');
-            document.getElementById(tabPaneId).classList.add('active', 'show');
+    });
+    
+    // 页面加载时恢复上次的标签页
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedTab = localStorage.getItem('activeReportTab');
+        if (savedTab) {
+            let tabElement;
+            if (savedTab === 'patients') {
+                tabElement = new bootstrap.Tab(document.getElementById('patients-tab'));
+            } else if (savedTab === 'reports') {
+                tabElement = new bootstrap.Tab(document.getElementById('reports-tab'));
+            }
+            if (tabElement) {
+                tabElement.show();
+            }
         }
+        
+        // 恢复焦点到上次的输入框
+        const lastFocusedElement = localStorage.getItem('lastFocusedElement');
+        if (lastFocusedElement) {
+            const element = document.querySelector(lastFocusedElement);
+            if (element) {
+                setTimeout(() => {
+                    element.focus();
+                    
+                    // 如果是文本框，将光标移到文本末尾
+                    if (element.tagName === 'INPUT' && element.type === 'text') {
+                        element.setSelectionRange(element.value.length, element.value.length);
+                    }
+                }, 100);
+            }
+        }
+    });
+    
+    // 监听输入框的focus事件，记住当前焦点元素
+    document.querySelectorAll('input[type="text"], input[type="search"], textarea').forEach(input => {
+        input.addEventListener('focus', function() {
+            localStorage.setItem('lastFocusedElement', `[name="${this.name}"]`);
+        });
+    });
+    
+    // 监听表单提交，保存焦点元素
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.form === this) {
+                localStorage.setItem('lastFocusedElement', `[name="${activeElement.name}"]`);
+            }
+        });
     });
 </script>

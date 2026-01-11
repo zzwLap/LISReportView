@@ -14,6 +14,10 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AllowAnonymousToPage("/Privacy"); // 隐私页不需要登录
 });
 
+
+
+
+
 // 添加HttpContextAccessor服务
 builder.Services.AddHttpContextAccessor();
 
@@ -56,5 +60,10 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
+
+// 映射API控制器
+app.MapControllers();
+
+
 
 app.Run();
