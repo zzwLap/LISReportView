@@ -1,7 +1,16 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using LisReportServer.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+// 添加HttpContextAccessor服务
+builder.Services.AddHttpContextAccessor();
+
+// 添加Cookie服务
+builder.Services.AddScoped<ICookieService, CookieService>();
 
 // 添加身份验证服务
 builder.Services.AddAuthentication(options =>

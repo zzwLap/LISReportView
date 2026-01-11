@@ -2,11 +2,19 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using LisReportServer.Services;
 
 namespace LisReportServer.Pages
 {
     public class LoginModel : PageModel
     {
+        private readonly ICookieService _cookieService;
+
+        public LoginModel(ICookieService cookieService)
+        {
+            _cookieService = cookieService;
+        }
+
         [BindProperty]
         public InputModel Input { get; set; } = new();
 
@@ -30,7 +38,7 @@ namespace LisReportServer.Pages
             [Display(Name = "密码")]
             public string Password { get; set; } = string.Empty;
 
-            [Display(Name = "记住我?")]
+            [Display(Name = "下次自动填写医院和用户名")]
             public bool RememberMe { get; set; }
         }
 
@@ -47,6 +55,15 @@ namespace LisReportServer.Pages
             if (HttpContext.User.Identity?.IsAuthenticated == true)
             {
                 return LocalRedirect(returnUrl);
+            }
+
+            // 从Cookie中获取记住的凭据
+            var rememberedCredentials = _cookieService.GetRememberMeCookie();
+            if (rememberedCredentials.HasValue)
+            {
+                Input.HospitalName = rememberedCredentials.Value.hospitalName;
+                Input.Username = rememberedCredentials.Value.username;
+                Input.RememberMe = true; // 默认勾选记住我
             }
 
             ReturnUrl = returnUrl;
@@ -83,6 +100,9 @@ namespace LisReportServer.Pages
                         IsPersistent = Input.RememberMe,
                         ExpiresUtc = Input.RememberMe ? DateTimeOffset.UtcNow.AddDays(7) : DateTimeOffset.UtcNow.AddMinutes(30)
                     };
+
+                    // 设置记住密码的Cookie
+                    _cookieService.SetRememberMeCookie(Input.HospitalName, Input.Username, Input.RememberMe);
 
                     await HttpContext.SignInAsync(
                         Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme,
