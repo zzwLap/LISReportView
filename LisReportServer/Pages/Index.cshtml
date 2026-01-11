@@ -4,7 +4,54 @@
     ViewData["Title"] = "首页";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="jumbotron text-center py-5">
+    <h1 class="display-4">欢迎使用检查报告系统</h1>
+    <p class="lead">专业的医疗检查报告管理系统，提供高效的报告上传、查询和统计功能。</p>
+    <hr class="my-4">
+    <p class="lead">
+        <strong>系统功能：</strong><br>
+        • 实时查看今日检查报告统计<br>
+        • 按住院号、检查号、门诊号快速查询<br>
+        • 成功/失败报告状态追踪<br>
+        • 安全可靠的医疗数据管理
+    </p>
+    <hr class="my-4">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a class="btn btn-primary btn-lg" asp-page="/Dashboard" role="button">进入系统仪表板</a>
+    }
+    else
+    {
+        <a class="btn btn-primary btn-lg" asp-page="/Login" role="button">登录系统</a>
+    }
+</div>
+
+<!-- 特色功能展示 -->
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">实时统计</h5>
+                    <p class="card-text">即时查看今日报告上传情况，包括成功与失败数量统计。</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">多维度查询</h5>
+                    <p class="card-text">支持按住院号、检查号、门诊号等多种方式快速检索报告。</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">安全可靠</h5>
+                    <p class="card-text">采用安全的身份验证机制，保障医疗数据的安全性。</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

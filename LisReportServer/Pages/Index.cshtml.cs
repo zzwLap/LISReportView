@@ -7,12 +7,9 @@ public class IndexModel : PageModel
 {
     public IActionResult OnGet()
     {
-        // 如果用户已登录，重定向到仪表板
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            return RedirectToPage("/Dashboard");
-        }
-        
+        // 首页现在支持显示已登录和未登录两种状态
+        // 如果用户已登录，可以在页面上显示进入仪表板的按钮
+        // 不再直接重定向，而是显示首页内容
         return Page();
     }
 }
