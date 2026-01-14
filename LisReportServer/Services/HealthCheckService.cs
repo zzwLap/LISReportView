@@ -32,7 +32,7 @@ namespace LisReportServer.Services
         {
             var healthStatus = new HealthStatus
             {
-                CheckedAt = DateTime.UtcNow,
+                CheckedAtUtc = DateTime.UtcNow,
                 ServiceName = "LIS Report Server",
                 Version = "1.0.0"
             };
@@ -317,7 +317,9 @@ namespace LisReportServer.Services
             return new Dictionary<string, object>
             {
                 { "status", status.Status },
-                { "checked_at", status.CheckedAt },
+                { "checked_at_utc", status.CheckedAtUtc },
+                { "checked_at_local", status.CheckedAtLocal },
+                { "timezone_offset", status.TimezoneOffset },
                 { "service_name", status.ServiceName },
                 { "version", status.Version },
                 { "components", status.Components }

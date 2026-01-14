@@ -45,8 +45,11 @@
                                 <dt class="col-sm-4">版本</dt>
                                 <dd class="col-sm-8">@Model.HealthStatus.Version</dd>
                                 
-                                <dt class="col-sm-4">检查时间</dt>
-                                <dd class="col-sm-8">@Model.HealthStatus.CheckedAt.ToString("yyyy-MM-dd HH:mm:ss UTC")</dd>
+                                <dt class="col-sm-4">UTC检查时间</dt>
+                                <dd class="col-sm-8">@Model.HealthStatus.CheckedAtUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC</dd>
+                                
+                                <dt class="col-sm-4">本地检查时间</dt>
+                                <dd class="col-sm-8">@Model.HealthStatus.CheckedAtLocal.ToString("yyyy-MM-dd HH:mm:ss") (@Model.HealthStatus.TimezoneOffset)</dd>
                             </dl>
                         </div>
                     </div>

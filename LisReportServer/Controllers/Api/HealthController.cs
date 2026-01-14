@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using LisReportServer.Services;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
+using LisReportServer.Helpers;
 
 namespace LisReportServer.Controllers.Api
 {
@@ -10,11 +11,13 @@ namespace LisReportServer.Controllers.Api
     public class HealthController : ControllerBase
     {
         private readonly IHealthCheckService _healthCheckService;
+        private readonly ITimezoneService _timezoneService;
         private readonly ILogger<HealthController> _logger;
 
-        public HealthController(IHealthCheckService healthCheckService, ILogger<HealthController> logger)
+        public HealthController(IHealthCheckService healthCheckService, ITimezoneService timezoneService, ILogger<HealthController> logger)
         {
             _healthCheckService = healthCheckService;
+            _timezoneService = timezoneService;
             _logger = logger;
         }
 
@@ -24,11 +27,28 @@ namespace LisReportServer.Controllers.Api
         [HttpGet]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(HealthStatus), 200)]
-        public async Task<ActionResult<HealthStatus>> GetHealth()
+        public async Task<ActionResult<HealthStatus>> GetHealth([FromQuery]string timezone = null)
         {
             try
             {
                 var healthStatus = await _healthCheckService.GetHealthStatusAsync();
+                
+                // 使用时区服务来处理时区转换
+                if (!string.IsNullOrEmpty(timezone))
+                {
+                    var clientTimezoneInfo = TimezoneHelper.GetTimeZoneInfoFromIana(timezone);
+                    if (clientTimezoneInfo != null)
+                    {
+                        healthStatus.SetClientTimezoneInfo(clientTimezoneInfo);
+                    }
+                }
+                else
+                {
+                    // 使用当前请求的时区设置
+                    var currentTimezoneInfo = _timezoneService.GetCurrentTimezone();
+                    healthStatus.SetClientTimezoneInfo(currentTimezoneInfo);
+                }
+                
                 var statusCode = healthStatus.Status switch
                 {
                     "Healthy" => 200,
@@ -46,7 +66,7 @@ namespace LisReportServer.Controllers.Api
                 return StatusCode(500, new HealthStatus 
                 { 
                     Status = "Unhealthy", 
-                    CheckedAt = DateTime.UtcNow,
+                    CheckedAtUtc = DateTime.UtcNow,
                     Components = new Dictionary<string, object>
                     {
                         { "error", new { status = "Unhealthy", message = ex.Message } }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using LisReportServer.Services;
 using LisReportServer.Data;
+using LisReportServer.Middleware;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -23,6 +24,9 @@ builder.Services.AddRazorPages(options =>
 
 // 添加HttpContextAccessor服务
 builder.Services.AddHttpContextAccessor();
+
+// 添加基础时区服务
+builder.Services.AddScoped<ITimezoneService, BasicTimezoneService>();
 
 // 添加Cookie服务
 builder.Services.AddScoped<ICookieService, CookieService>();
@@ -94,6 +98,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+// 添加时区中间件
+app.UseMiddleware<TimezoneMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -66,8 +66,8 @@ namespace LisReportServer.Services
                 var healthStatus = await healthCheckService.GetHealthStatusAsync();
                 
                 // 记录健康状态到日志
-                _logger.LogInformation("Health Status Published - Overall: {Status}, CheckedAt: {CheckedAt}, Components: {@Components}",
-                    healthStatus.Status, healthStatus.CheckedAt, healthStatus.Components);
+                _logger.LogInformation("Health Status Published - Overall: {Status}, CheckedAtUtc: {CheckedAtUtc}, CheckedAtLocal: {CheckedAtLocal}, Components: {@Components}",
+                    healthStatus.Status, healthStatus.CheckedAtUtc, healthStatus.CheckedAtLocal, healthStatus.Components);
 
                 // 这里可以添加更多发布逻辑，如：
                 // 1. 将状态发布到外部监控系统
@@ -93,7 +93,9 @@ namespace LisReportServer.Services
                 var statusData = new
                 {
                     Status = healthStatus.Status,
-                    CheckedAt = healthStatus.CheckedAt,
+                    CheckedAtUtc = healthStatus.CheckedAtUtc,
+                    CheckedAtLocal = healthStatus.CheckedAtLocal,
+                    TimezoneOffset = healthStatus.TimezoneOffset,
                     ServiceName = healthStatus.ServiceName,
                     Version = healthStatus.Version,
                     Components = healthStatus.Components,
