@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using LisReportServer.Services;
+using LisReportServer.Data;
+using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +30,32 @@ builder.Services.AddScoped<ICookieService, CookieService>();
 // 添加报告服务
 builder.Services.AddSingleton<IReportService, ReportService>();
 
+// 添加医院服务器配置服务
+builder.Services.AddScoped<IHospitalServerConfigService, HospitalServerConfigService>();
+
+// 添加Redis连接（如果配置了Redis连接字符串）
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnectionString));
+    builder.Services.AddScoped<ITokenBlacklistService, AdvancedTokenBlacklistService>();
+}
+else
+{
+    // 如果没有Redis配置，使用内存版本
+    builder.Services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
+}
+
+// 添加后台服务清理过期的黑名单令牌
+builder.Services.AddHostedService<TokenBlacklistCleanupService>();
+
+// 添加内存缓存
+builder.Services.AddMemoryCache();
+
+// 添加数据库上下文
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // 添加身份验证服务
 builder.Services.AddAuthentication(options =>
 {
@@ -38,7 +67,13 @@ builder.Services.AddAuthentication(options =>
     options.LogoutPath = "/Logout";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
+    
+    // 通过工厂方法注入自定义事件
+    options.EventsType = typeof(CustomCookieAuthenticationEvents);
 });
+
+// 注册自定义身份验证事件
+builder.Services.AddTransient<CustomCookieAuthenticationEvents>();
 
 var app = builder.Build();
 

@@ -1,0 +1,228 @@
+    @page
+@model HospitalServerConfigsModel
+@{
+    ViewData["Title"] = "医院服务器配置管理";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">医院服务器配置管理</h2>
+            
+            <!-- 管理员标识 -->
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-user-shield"></i> 管理员专用功能
+            </div>
+            
+            @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+            {
+                <div class="alert alert-success" role="alert">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+            
+            <!-- 显示模型验证错误 -->
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert">
+                <strong>请修正以下错误:</strong>
+                <ul class="mb-0 mt-2 ps-4">
+                    @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>@(Model.Config.Id > 0 ? "编辑医院服务器配置" : "新增医院服务器配置")</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" asp-for="Config.Id" />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Config.HospitalName" class="form-label">医院名称 *</label>
+                                    <input asp-for="Config.HospitalName" class="form-control" placeholder="请输入医院名称" />
+                                    <span asp-validation-for="Config.HospitalName" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Config.HospitalCode" class="form-label">医院编码 *</label>
+                                    <input asp-for="Config.HospitalCode" class="form-control" placeholder="请输入医院编码，只能包含字母、数字、下划线和横线" />
+                                    <span asp-validation-for="Config.HospitalCode" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Config.ServerAddress" class="form-label">服务器地址 *</label>
+                                    <input asp-for="Config.ServerAddress" class="form-control" placeholder="例如: 192.168.1.100 或 https://example.com" />
+                                    <span asp-validation-for="Config.ServerAddress" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Config.Port" class="form-label">端口号</label>
+                                    <input asp-for="Config.Port" type="number" class="form-control" placeholder="例如: 8080" min="1" max="65535" />
+                                    <span asp-validation-for="Config.Port" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Config.Username" class="form-label">连接用户名</label>
+                                    <input asp-for="Config.Username" class="form-control" placeholder="请输入用户名" />
+                                    <span asp-validation-for="Config.Username" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Config.EncryptedPassword" class="form-label">连接密码</label>
+                                    <input asp-for="Config.EncryptedPassword" type="password" class="form-control" placeholder="请输入密码" />
+                                    <span asp-validation-for="Config.EncryptedPassword" class="text-danger"></span>
+                                    <div class="form-text">留空表示不修改密码</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Config.OtherParameters" class="form-label">其他参数</label>
+                                    <textarea asp-for="Config.OtherParameters" class="form-control" rows="3" placeholder="其他连接参数，如认证方式等"></textarea>
+                                    <span asp-validation-for="Config.OtherParameters" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="Config.IsActive" class="form-check-input" type="checkbox">
+                                <label asp-for="Config.IsActive" class="form-check-label">启用此配置</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">@(Model.Config.Id > 0 ? "更新配置" : "创建配置")</button>
+                            @if (Model.Config.Id > 0)
+                            {
+                                <a asp-page="./HospitalServerConfigs" class="btn btn-secondary">取消编辑</a>
+                            }
+                            else
+                            {
+                                <button type="reset" class="btn btn-secondary">重置表单</button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">医院服务器配置列表</h5>
+                    
+                    <div class="d-flex gap-2">
+                        <form method="post" asp-page-handler="Search" class="d-flex">
+                            <input asp-for="SearchTerm" class="form-control me-2" style="width: 250px;" placeholder="搜索医院名称、地址或用户名..." />
+                            <button type="submit" class="btn btn-outline-secondary">搜索</button>
+                            <a asp-page="./HospitalServerConfigs" class="btn btn-outline-secondary">清除</a>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Configs.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>医院编码</th>
+                                        <th>医院名称</th>
+                                        <th>服务器地址</th>
+                                        <th>端口</th>
+                                        <th>用户名</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>更新时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var config in Model.Configs)
+                                    {
+                                        <tr>
+                                            <td>@config.HospitalCode</td>
+                                            <td>@config.HospitalName</td>
+                                            <td>@config.ServerAddress</td>
+                                            <td>@(config.Port?.ToString() ?? "-")</td>
+                                            <td>@(config.Username ?? "-")</td>
+                                            <td>
+                                                @if (config.IsActive)
+                                                {
+                                                    <span class="badge bg-success">启用</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">禁用</span>
+                                                }
+                                            </td>
+                                            <td>@config.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>@config.UpdatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a asp-page="./HospitalServerConfigs" asp-route-editId="@config.Id" class="btn btn-sm btn-outline-primary">编辑</a>
+                                                    <form method="post" asp-page-handler="ToggleStatus" class="d-inline">
+                                                        <input type="hidden" name="id" value="@config.Id" />
+                                                        <button type="submit" class="btn btn-sm @(config.IsActive ? "btn-outline-warning" : "btn-outline-success")">
+                                                            @(config.IsActive ? "禁用" : "启用")
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirm('确定要删除医院【@config.HospitalName】的服务器配置吗？此操作不可撤销。');">
+                                                        <input type="hidden" name="DeleteId" value="@config.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-server fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">
+                                @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                                {
+                                    <text>未找到匹配的医院服务器配置</text>
+                                }
+                                else
+                                {
+                                    <text>暂无医院服务器配置</text>
+                                }
+                            </h5>
+                            <p class="text-muted">
+                                @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                                {
+                                    <text>尝试使用其他关键词搜索</text>
+                                }
+                                else
+                                {
+                                    <text>请添加新的医院服务器配置</text>
+                                }
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

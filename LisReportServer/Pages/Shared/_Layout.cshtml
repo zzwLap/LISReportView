@@ -31,6 +31,12 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-page="/ReportsDashboard">检查报告</a>
                             </li>
+                            @if (User.IsInRole("Admin") || User.Identity.Name == "admin")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-page="/Admin/HospitalServerConfigs">服务器配置</a>
+                                </li>
+                            }
                         }
                     </ul>
                     <ul class="navbar-nav">

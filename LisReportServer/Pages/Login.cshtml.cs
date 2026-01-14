@@ -89,8 +89,15 @@ namespace LisReportServer.Pages
                         new System.Security.Claims.Claim("HospitalName", Input.HospitalName),
                         new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, Input.Username),
                         new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, Input.Username),
-                        new System.Security.Claims.Claim("LoginTime", DateTime.Now.ToString())
+                        new System.Security.Claims.Claim("LoginTime", DateTime.Now.ToString()),
+                        new System.Security.Claims.Claim("SessionId", Guid.NewGuid().ToString()) // 添加会话ID
                     };
+
+                    // 为admin用户添加管理员角色
+                    if (Input.Username == "admin")
+                    {
+                        claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Admin"));
+                    }
 
                     var claimsIdentity = new System.Security.Claims.ClaimsIdentity(
                         claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
