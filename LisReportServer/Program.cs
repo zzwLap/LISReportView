@@ -33,6 +33,12 @@ builder.Services.AddSingleton<IReportService, ReportService>();
 // 添加医院服务器配置服务
 builder.Services.AddScoped<IHospitalServerConfigService, HospitalServerConfigService>();
 
+// 添加健康检查服务
+builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
+
+// 添加健康状态发布后台服务
+builder.Services.AddHostedService<HealthStatusPublishingService>();
+
 // 添加Redis连接（如果配置了Redis连接字符串）
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
 if (!string.IsNullOrEmpty(redisConnectionString))

@@ -1,0 +1,107 @@
+@page
+@model HealthStatusModel
+@{
+    ViewData["Title"] = "系统健康状态";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">系统健康状态</h2>
+            
+            @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>总体状态</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">状态</dt>
+                                <dd class="col-sm-8">
+                                    @{
+                                        var statusClass = Model.HealthStatus.Status switch
+                                        {
+                                            "Healthy" => "text-success",
+                                            "Degraded" => "text-warning",
+                                            "Unhealthy" => "text-danger",
+                                            _ => "text-secondary"
+                                        };
+                                    }
+                                    <span class="@statusClass fw-bold">@Model.HealthStatus.Status</span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">服务名称</dt>
+                                <dd class="col-sm-8">@Model.HealthStatus.ServiceName</dd>
+                                
+                                <dt class="col-sm-4">版本</dt>
+                                <dd class="col-sm-8">@Model.HealthStatus.Version</dd>
+                                
+                                <dt class="col-sm-4">检查时间</dt>
+                                <dd class="col-sm-8">@Model.HealthStatus.CheckedAt.ToString("yyyy-MM-dd HH:mm:ss UTC")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>组件状态详情</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var component in Model.HealthStatus.Components)
+                        {
+                            var componentStatus = component.Value as Dictionary<string, object>;
+                            var status = componentStatus?["status"]?.ToString();
+                            
+                            var statusBadge = status switch
+                            {
+                                "Healthy" => "bg-success",
+                                "Degraded" => "bg-warning",
+                                "Unhealthy" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                            
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold">@component.Key</span>
+                                            <span class="badge @statusBadge">@status</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled mb-0">
+                                            @if (componentStatus != null)
+                                            {
+                                                foreach (var prop in componentStatus.Where(p => p.Key != "status"))
+                                                {
+                                                    <li><small><strong>@prop.Key:</strong> @prop.Value</small></li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a asp-page="/Index" class="btn btn-secondary">返回首页</a>
+                <button type="button" class="btn btn-outline-primary" onclick="location.reload()">刷新状态</button>
+            </div>
+        </div>
+    </div>
+</div>
