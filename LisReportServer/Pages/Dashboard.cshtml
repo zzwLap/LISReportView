@@ -18,7 +18,11 @@
                     <hr />
                     <p class="mb-0">
                         用户名: <strong>@User.Identity.Name</strong><br />
-                        登录时间: <strong>@DateTime.Parse(User.FindFirst("LoginTime")?.Value ?? DateTime.Now.ToString()).ToString("yyyy年MM月dd日 HH时mm分ss秒")</strong><br />
+                        登录时间: <strong>
+                            <span data-utc-time="@DateTime.Parse(User.FindFirst("LoginTime")?.Value ?? DateTime.Now.ToString()).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")" data-format="datetime">
+                                @DateTime.Parse(User.FindFirst("LoginTime")?.Value ?? DateTime.Now.ToString()).ToString("yyyy年MM月dd日 HH时mm分ss秒")
+                            </span>
+                        </strong><br />
                         医院: <strong>@User.FindFirst("HospitalName")?.Value</strong>
                     </p>
                 </div>

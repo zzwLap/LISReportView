@@ -112,7 +112,11 @@
                                                     <td>@patient.PatientId</td>
                                                     <td>@patient.OutpatientId</td>
                                                     <td>@patient.ExamType</td>
-                                                    <td>@patient.ExamTime.ToString("HH:mm")</td>
+                                                    <td>
+                                                        <span data-utc-time="@patient.ExamTime.ToString("yyyy-MM-ddTHH:mm:ssZ")" data-format="time">
+                                                            @patient.ExamTime.ToString("HH:mm")
+                                                        </span>
+                                                    </td>
                                                     <td>
                                                         @if (patient.ExamStatus == "已检查")
                                                         {
@@ -239,7 +243,11 @@
                                                     <td>@report.ExamId</td>
                                                     <td>@report.OutpatientId</td>
                                                     <td>@report.ExamType</td>
-                                                    <td>@report.UploadTime.ToString("HH:mm:ss")</td>
+                                                    <td>
+                                                        <span data-utc-time="@report.UploadTime.ToString("yyyy-MM-ddTHH:mm:ssZ")" data-format="time">
+                                                            @report.UploadTime.ToString("HH:mm:ss")
+                                                        </span>
+                                                    </td>
                                                     <td>
                                                         @if (report.IsSuccessful)
                                                         {

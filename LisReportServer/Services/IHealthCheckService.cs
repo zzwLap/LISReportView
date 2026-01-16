@@ -37,7 +37,9 @@ namespace LisReportServer.Services
         {
             var offset = timeZone.BaseUtcOffset;
             var sign = offset >= TimeSpan.Zero ? "+" : "-";
-            return $"{sign}{offset:hh:mm}";
+            var hours = Math.Abs(offset.Hours);
+            var minutes = Math.Abs(offset.Minutes);
+            return $"{sign}{hours:D2}:{minutes:D2}";
         }
     }
 }

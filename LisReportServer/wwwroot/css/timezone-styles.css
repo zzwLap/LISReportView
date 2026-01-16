@@ -1,0 +1,74 @@
+/* 时区时间显示样式 */
+
+.timezone-time {
+    font-family: 'Courier New', monospace;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 2px 6px;
+    display: inline-block;
+    font-size: 0.9em;
+}
+
+.timezone-time:hover {
+    background-color: #e9ecef;
+}
+
+.timezone-info-tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.timezone-info-tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #495057;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.85em;
+    font-family: Arial, sans-serif;
+}
+
+.timezone-info-tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* 时间元素的基础样式 */
+.time-element {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.time-element .time-value {
+    font-weight: 500;
+}
+
+.time-element .timezone-indicator {
+    font-size: 0.8em;
+    color: #6c757d;
+    background-color: #f1f3f4;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* 为动态加载的内容预留样式 */
+[data-utc-time] {
+    transition: opacity 0.2s ease-in-out;
+}
+
+[data-utc-time].loading {
+    opacity: 0.6;
+}

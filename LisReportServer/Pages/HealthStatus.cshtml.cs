@@ -39,7 +39,7 @@ namespace LisReportServer.Pages
                 HealthStatus = new HealthStatus
                 {
                     Status = "Unhealthy",
-                    CheckedAt = DateTime.UtcNow,
+                    CheckedAtUtc = DateTime.UtcNow,
                     ServiceName = "LIS Report Server",
                     Version = "1.0.0",
                     Components = new Dictionary<string, object>
