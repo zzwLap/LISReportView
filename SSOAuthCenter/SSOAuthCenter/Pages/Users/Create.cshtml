@@ -1,0 +1,129 @@
+@page
+@model CreateModel
+@{
+    ViewData["Title"] = "创建用户";
+}
+
+<h2>创建新用户</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Input.Username" class="control-label">用户名 *</label>
+                <input asp-for="Input.Username" class="form-control" />
+                <span asp-validation-for="Input.Username" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Input.Email" class="control-label">邮箱 *</label>
+                <input asp-for="Input.Email" class="form-control" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Input.Password" class="control-label">密码 *</label>
+                <input asp-for="Input.Password" type="password" class="form-control" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Input.ConfirmPassword" class="control-label">确认密码 *</label>
+                <input asp-for="Input.ConfirmPassword" type="password" class="form-control" />
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Input.FirstName" class="control-label">名字</label>
+                <input asp-for="Input.FirstName" class="form-control" />
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Input.LastName" class="control-label">姓氏</label>
+                <input asp-for="Input.LastName" class="form-control" />
+            </div>
+            
+            <div class="form-group mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="Input.IsActive" type="checkbox" />
+                    <label class="form-check-label" asp-for="Input.IsActive">激活状态</label>
+                </div>
+            </div>
+            
+            <div class="form-group mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="Input.IsEmailConfirmed" type="checkbox" />
+                    <label class="form-check-label" asp-for="Input.IsEmailConfirmed">邮箱已确认</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <input type="submit" value="创建用户" class="btn btn-primary" />
+                <a asp-page="./Index" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@functions{
+    public class CreateModel : Microsoft.AspNetCore.Mvc.RazorPages.PageModel
+    {
+        private readonly SSOAuthCenter.Services.Interfaces.IAuthService _authService;
+
+        public CreateModel(SSOAuthCenter.Services.Interfaces.IAuthService authService)
+        {
+            _authService = authService;
+        }
+
+        [BindProperty]
+        public InputModel Input { get; set; } = new InputModel();
+
+        public class InputModel
+        {
+            public string Username { get; set; } = string.Empty;
+            
+            public string Email { get; set; } = string.Empty;
+            
+            public string Password { get; set; } = string.Empty;
+            
+            public string ConfirmPassword { get; set; } = string.Empty;
+            
+            public string? FirstName { get; set; }
+            
+            public string? LastName { get; set; }
+            
+            public bool IsActive { get; set; } = true;
+            
+            public bool IsEmailConfirmed { get; set; } = false;
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
+            if (Input.Password != Input.ConfirmPassword)
+            {
+                ModelState.AddModelError(string.Empty, "密码和确认密码不匹配");
+                return Page();
+            }
+
+            var result = await _authService.CreateUserAsync(Input.Username, Input.Email, Input.Password);
+            if (!result)
+            {
+                ModelState.AddModelError(string.Empty, "创建用户失败，可能用户名或邮箱已存在");
+                return Page();
+            }
+
+            return RedirectToPage("./Index");
+        }
+    }
+}

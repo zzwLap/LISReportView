@@ -1,0 +1,71 @@
+@page
+@model DetailsModel
+@{
+    ViewData["Title"] = "用户详情";
+}
+
+<h2>用户详情</h2>
+
+<div>
+    <h4>用户信息</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">ID</dt>
+        <dd class="col-sm-10">@Model.User.Id</dd>
+        
+        <dt class="col-sm-2">用户名</dt>
+        <dd class="col-sm-10">@Model.User.Username</dd>
+        
+        <dt class="col-sm-2">邮箱</dt>
+        <dd class="col-sm-10">@Model.User.Email</dd>
+        
+        <dt class="col-sm-2">姓名</dt>
+        <dd class="col-sm-10">@(string.IsNullOrEmpty(Model.User.FirstName) ? "" : Model.User.FirstName) @(string.IsNullOrEmpty(Model.User.LastName) ? "" : Model.User.LastName)</dd>
+        
+        <dt class="col-sm-2">激活状态</dt>
+        <dd class="col-sm-10">@(Model.User.IsActive ? "是" : "否")</dd>
+        
+        <dt class="col-sm-2">邮箱已确认</dt>
+        <dd class="col-sm-10">@(Model.User.IsEmailConfirmed ? "是" : "否")</dd>
+        
+        <dt class="col-sm-2">创建时间</dt>
+        <dd class="col-sm-10">@Model.User.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+        
+        <dt class="col-sm-2">更新时间</dt>
+        <dd class="col-sm-10">@Model.User.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-page="./Index" class="btn btn-primary">返回列表</a>
+</div>
+
+@functions{
+    public class DetailsModel : Microsoft.AspNetCore.Mvc.RazorPages.PageModel
+    {
+        private readonly SSOAuthCenter.Services.Interfaces.IAuthService _authService;
+
+        public DetailsModel(SSOAuthCenter.Services.Interfaces.IAuthService authService)
+        {
+            _authService = authService;
+        }
+
+        public SSOAuthCenter.Models.User User { get; set; } = new SSOAuthCenter.Models.User();
+
+        public async Task<IActionResult> OnGetAsync(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            User = await _authService.GetUserByIdAsync(id.Value);
+            if (User == null)
+            {
+                return NotFound();
+            }
+
+            return Page();
+        }
+    }
+}

@@ -1,0 +1,59 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "SSO 认证中心";
+    Layout = "_Layout";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4">SSO 认证中心</h1>
+    <p class="lead">安全、可扩展的单点登录解决方案</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">OAuth 2.0 支持</h5>
+                    <p class="card-text">支持标准的OAuth 2.0授权流程</p>
+                    <a href="/api/oauth/authorize" class="btn btn-primary">开始授权</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">统一认证</h5>
+                    <p class="card-text">为多个子系统提供统一认证服务</p>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <p class="text-success">已登录: @User.Identity.Name</p>
+                        <a asp-page="/Logout" class="btn btn-secondary">登出</a>
+                    }
+                    else
+                    {
+                        <a asp-page="/Login" class="btn btn-primary">登录</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">安全可靠</h5>
+                    <p class="card-text">采用行业标准的安全协议</p>
+                    <a href="#" class="btn btn-info">了解更多</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="mt-4 p-3 bg-light rounded">
+            <h4>用户信息</h4>
+            <p>用户名: @User.Identity.Name</p>
+            <p>用户ID: @User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value</p>
+            <p>角色: @string.Join(", ", User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value))</p>
+        </div>
+    }
+</div>
