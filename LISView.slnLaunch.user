@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "新建配置文件",
+    "Projects": [
+      {
+        "Path": "LisReportServer\\LisReportServer.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "SSOAuthCenter\\SSOAuthCenter\\SSOAuthCenter.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

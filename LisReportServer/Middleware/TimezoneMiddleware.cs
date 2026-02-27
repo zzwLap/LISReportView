@@ -17,26 +17,33 @@ namespace LisReportServer.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // 尝试从请求头或查询参数中获取时区信息
-            var timezone = GetTimezoneFromRequest(context);
-
-            if (!string.IsNullOrEmpty(timezone))
+            try
             {
-                // 将时区信息存储到HttpContext.Items中，供后续处理程序使用
-                context.Items["ClientTimezone"] = timezone;
-                
-                try
+                // 尝试从请求头或查询参数中获取时区信息
+                var timezone = GetTimezoneFromRequest(context);
+
+                if (!string.IsNullOrEmpty(timezone))
                 {
-                    var timeZoneInfo = TimezoneHelper.GetTimeZoneInfoFromIana(timezone);
-                    if (timeZoneInfo != null)
+                    // 将时区信息存储到HttpContext.Items中，供后续处理程序使用
+                    context.Items["ClientTimezone"] = timezone;
+                    
+                    try
                     {
-                        context.Items["ClientTimezoneInfo"] = timeZoneInfo;
+                        var timeZoneInfo = TimezoneHelper.GetTimeZoneInfoFromIana(timezone);
+                        if (timeZoneInfo != null)
+                        {
+                            context.Items["ClientTimezoneInfo"] = timeZoneInfo;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Invalid timezone provided: {Timezone}", timezone);
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Invalid timezone provided: {Timezone}", timezone);
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error in TimezoneMiddleware processing");
             }
 
             await _next(context);

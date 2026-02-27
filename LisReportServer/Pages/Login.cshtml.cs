@@ -9,10 +9,17 @@ namespace LisReportServer.Pages
     public class LoginModel : PageModel
     {
         private readonly ICookieService _cookieService;
+        private readonly IUserAuthenticationService _userAuthenticationService;
+        private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(ICookieService cookieService)
+        public LoginModel(
+            ICookieService cookieService,
+            IUserAuthenticationService userAuthenticationService,
+            ILogger<LoginModel> logger)
         {
             _cookieService = cookieService;
+            _userAuthenticationService = userAuthenticationService;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -77,9 +84,47 @@ namespace LisReportServer.Pages
             // 检查模型状态
             if (ModelState.IsValid)
             {
-                // 这里应该调用实际的身份验证逻辑
-                // 模拟验证（在实际应用中，应连接数据库或API验证凭据）
-                var isValidUser = await ValidateUserAsync(Input.HospitalName, Input.Username, Input.Password);
+                // 根据医院名称决定使用本地验证还是第三方验证
+                bool isValidUser;
+                List<string> userRoles = new List<string>();
+
+                if (Input.HospitalName == "系统")
+                {
+                    // 使用本地数据库验证
+                    var authResult = await _userAuthenticationService.AuthenticateAsync(
+                        Input.Username, 
+                        Input.Password, 
+                        Input.HospitalName);
+
+                    if (authResult.Success && authResult.User != null)
+                    {
+                        isValidUser = true;
+                        userRoles = authResult.Roles.Select(r => r.Name).ToList();
+                        _logger.LogInformation("本地用户 {Username} 登录成功", Input.Username);
+                    }
+                    else
+                    {
+                        isValidUser = false;
+                        _logger.LogWarning("本地用户 {Username} 登录失败: {Error}", Input.Username, authResult.ErrorMessage);
+                        ModelState.AddModelError(string.Empty, authResult.ErrorMessage ?? "无效的登录尝试。");
+                    }
+                }
+                else
+                {
+                    // 使用第三方验证服务（暂时保留原有逻辑）
+                    isValidUser = await ValidateUserAsync(Input.HospitalName, Input.Username, Input.Password);
+                    
+                    if (isValidUser)
+                    {
+                        // 第三方验证成功，默认给予普通用户权限
+                        userRoles.Add("User");
+                        _logger.LogInformation("第三方用户 {Username} 登录成功，医院: {HospitalName}", Input.Username, Input.HospitalName);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("第三方用户 {Username} 登录失败，医院: {HospitalName}", Input.Username, Input.HospitalName);
+                    }
+                }
 
                 if (isValidUser)
                 {
@@ -90,13 +135,14 @@ namespace LisReportServer.Pages
                         new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, Input.Username),
                         new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, Input.Username),
                         new System.Security.Claims.Claim("LoginTime", DateTime.Now.ToString()),
-                        new System.Security.Claims.Claim("SessionId", Guid.NewGuid().ToString()) // 添加会话ID
+                        new System.Security.Claims.Claim("SessionId", Guid.NewGuid().ToString()),
+                        new System.Security.Claims.Claim("IsLocalUser", (Input.HospitalName == "系统").ToString())
                     };
 
-                    // 为admin用户添加管理员角色
-                    if (Input.Username == "admin")
+                    // 添加角色声明
+                    foreach (var role in userRoles)
                     {
-                        claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Admin"));
+                        claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
                     }
 
                     var claimsIdentity = new System.Security.Claims.ClaimsIdentity(
@@ -120,7 +166,14 @@ namespace LisReportServer.Pages
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "无效的登录尝试。");
+                    if (!ModelState.ErrorCount.Equals(0))
+                    {
+                        // 已经添加了错误消息
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "无效的登录尝试。");
+                    }
                 }
             }
 

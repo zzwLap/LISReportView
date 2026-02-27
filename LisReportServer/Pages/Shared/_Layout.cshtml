@@ -6,6 +6,7 @@
     <title>@ViewData["Title"] - 检查报告系统</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/timezone-styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/LisReportServer.styles.css" asp-append-version="true" />
@@ -34,8 +35,14 @@
                             </li>
                             @if (User.IsInRole("Admin") || User.Identity.Name == "admin")
                             {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/Admin/HospitalServerConfigs">服务器配置</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown">
+                                        系统配置
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-area="" asp-page="/Admin/HospitalProfiles">医院配置管理</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-page="/Admin/HospitalServiceConfigs">服务配置管理</a></li>
+                                    </ul>
                                 </li>
                             }
                             <li class="nav-item">
@@ -53,14 +60,14 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><span class="dropdown-item-text small text-muted">登录: @DateTime.Now.ToString("MM-dd HH:mm")</span></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-page="/Logout">退出</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">退出</a></li>
                                 </ul>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Login">登录</a>
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">登录</a>
                             </li>
                         }
                     </ul>

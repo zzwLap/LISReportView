@@ -1,3 +1,7 @@
 /LisReportServer/bin
 /LisReportServer/obj
 /.vs
+/SSOAuthCenter/SSOAuthCenter/bin
+/SSOAuthCenter/SSOAuthCenter/obj
+/.vscode
+/LisReportServer/Migrations

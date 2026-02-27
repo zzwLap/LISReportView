@@ -1,3 +1,8 @@
 <Solution>
+  <Project Path="../../MySource/ServiceDiscovery/ServiceMesh.Agent/ServiceMesh.Agent.csproj" />
+  <Project Path="../../MySource/ServiceDiscovery/ServiceMesh.Core/ServiceMesh.Core.csproj" />
+  <Project Path="../../MySource/ServiceDiscovery/ServiceMesh.Discovery/ServiceMesh.Discovery.csproj" />
+  <Project Path="../../MySource/ServiceDiscovery/ServiceMesh.Registry/ServiceMesh.Registry.csproj" />
   <Project Path="LisReportServer/LisReportServer.csproj" />
+  <Project Path="SSOAuthCenter/SSOAuthCenter/SSOAuthCenter.csproj" />
 </Solution>

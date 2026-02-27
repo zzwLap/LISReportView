@@ -14,6 +14,14 @@
                 <div class="card-body">
                     <form method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+                        {
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                @TempData["ErrorMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
                         
                         <div class="form-group mb-3">
                             <label asp-for="Input.HospitalName" class="control-label">医院名称</label>

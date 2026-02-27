@@ -1,0 +1,45 @@
+{
+  "status": "Degraded",
+  "checkedAtUtc": "2026-02-27T15:43:01.2269569Z",
+  "checkedAtLocal": "2026-02-27T23:43:01.2248255+08:00",
+  "timezoneOffset": "\u002B08:00",
+  "serviceName": "LIS Report Server",
+  "version": "1.0.0",
+  "components": {
+    "database": {
+      "status": "Healthy",
+      "response_time_ms": 0,
+      "message": "Database connection is healthy"
+    },
+    "hospital_config_service": {
+      "status": "Healthy",
+      "config_count": 4,
+      "message": "Hospital profile service is responsive"
+    },
+    "token_blacklist_service": {
+      "status": "Healthy",
+      "message": "Token blacklist service is available"
+    },
+    "memory": {
+      "status": "Healthy",
+      "process_used_mb": 106,
+      "message": "Process memory usage is 106 MB"
+    },
+    "disk_space": {
+      "status": "Degraded",
+      "free_gb": 30,
+      "used_gb": 369,
+      "total_gb": 399,
+      "usage_percent": 92.48,
+      "message": "Disk space usage is 92.48%"
+    },
+    "application": {
+      "status": "Healthy",
+      "uptime": "00:00:01.4784341",
+      "thread_count": 33,
+      "process_id": 38488,
+      "message": "Application is running normally"
+    }
+  },
+  "timestamp": "2026-02-27T15:43:01.5644738Z"
+}

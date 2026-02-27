@@ -1,0 +1,316 @@
+@page
+@model LisReportServer.Pages.Admin.HospitalProfilesModel
+@{
+    ViewData["Title"] = "医院配置管理";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>@ViewData["Title"]</h2>
+        </div>
+    </div>
+
+    <!-- 成功/错误消息 -->
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- 搜索和新增区域 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="post" asp-page-handler="Search" class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" asp-for="SearchTerm" placeholder="搜索医院名称、编码、地址..." />
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editModal" onclick="clearForm()">
+                        <i class="bi bi-plus-circle"></i> 新增医院
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 医院列表 -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">医院列表 (共 @Model.Profiles.Count 条)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>医院名称</th>
+                            <th>医院编码</th>
+                            <th>简称</th>
+                            <th>联系电话</th>
+                            <th>联系邮箱</th>
+                            <th>服务数</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Profiles.Any())
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1"></i>
+                                    <p class="mt-2">暂无医院配置数据</p>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var profile in Model.Profiles)
+                            {
+                                <tr>
+                                    <td>@profile.Id</td>
+                                    <td>
+                                        <strong>@profile.HospitalName</strong>
+                                        @if (!string.IsNullOrEmpty(profile.Description))
+                                        {
+                                            <br /><small class="text-muted">@profile.Description</small>
+                                        }
+                                    </td>
+                                    <td><code>@profile.HospitalCode</code></td>
+                                    <td>@(profile.ShortName ?? "-")</td>
+                                    <td>@(profile.ContactPhone ?? "-")</td>
+                                    <td>@(profile.ContactEmail ?? "-")</td>
+                                    <td>
+                                        <span class="badge bg-info">@profile.ServiceConfigs.Count 个服务</span>
+                                    </td>
+                                    <td>
+                                        @if (profile.IsActive)
+                                        {
+                                            <span class="badge bg-success">启用</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">禁用</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@profile.CreatedAt.ToString("yyyy-MM-dd HH:mm")</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary" onclick="editProfile(@profile.Id)" title="编辑">
+                                                <i class="bi bi-pencil"></i> 编辑
+                                            </button>
+                                            <form method="post" asp-page-handler="ToggleStatus" class="d-inline">
+                                                <input type="hidden" name="id" value="@profile.Id" />
+                                                <button type="submit" class="btn btn-outline-@(profile.IsActive ? "warning" : "success")" title="@(profile.IsActive ? "禁用" : "启用")">
+                                                    <i class="bi bi-toggle-@(profile.IsActive ? "on" : "off")"></i> @(profile.IsActive ? "禁用" : "启用")
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(@profile.Id, '@profile.HospitalName')" title="删除">
+                                                <i class="bi bi-trash"></i> 删除
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑/新增模态框 -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(Model.EditId.HasValue ? "编辑医院配置" : "新增医院配置")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Profile.Id" />
+                    
+                    <!-- 错误消息显示在模态框内 -->
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display: none;"></div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Profile.HospitalName" class="form-label"></label>
+                            <input asp-for="Profile.HospitalName" class="form-control" required />
+                            <span asp-validation-for="Profile.HospitalName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Profile.HospitalCode" class="form-label"></label>
+                            <input asp-for="Profile.HospitalCode" class="form-control" required />
+                            <span asp-validation-for="Profile.HospitalCode" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Profile.ShortName" class="form-label"></label>
+                            <input asp-for="Profile.ShortName" class="form-control" />
+                            <span asp-validation-for="Profile.ShortName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Profile.ContactPhone" class="form-label"></label>
+                            <input asp-for="Profile.ContactPhone" class="form-control" type="tel" />
+                            <span asp-validation-for="Profile.ContactPhone" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Profile.ContactEmail" class="form-label"></label>
+                            <input asp-for="Profile.ContactEmail" class="form-control" type="email" />
+                            <span asp-validation-for="Profile.ContactEmail" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Profile.Logo" class="form-label"></label>
+                            <input asp-for="Profile.Logo" class="form-control" />
+                            <span asp-validation-for="Profile.Logo" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Profile.Address" class="form-label"></label>
+                            <input asp-for="Profile.Address" class="form-control" />
+                            <span asp-validation-for="Profile.Address" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Profile.Description" class="form-label"></label>
+                            <textarea asp-for="Profile.Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Profile.Description" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="Profile.IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="Profile.IsActive" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">确认删除</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除医院配置 <strong id="deleteHospitalName"></strong> 吗？</p>
+                    <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> 此操作将同时删除该医院的所有服务配置，且不可恢复！</p>
+                    <input type="hidden" name="DeleteId" id="deleteId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // 如果有编辑ID或需要保持模态框打开，自动打开编辑模态框
+        @if (Model.EditId.HasValue || Model.KeepModalOpen)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                editModal.show();
+                
+                // 如果有验证错误，显示错误消息
+                var validationSummary = document.querySelector('.modal-body .alert-danger');
+                if (validationSummary && validationSummary.querySelector('ul')) {
+                    validationSummary.style.display = 'block';
+                }
+            });
+            </text>
+        }
+
+        function clearForm() {
+            document.getElementById('Profile_Id').value = '0';
+            document.querySelector('[name="Profile.HospitalName"]').value = '';
+            document.querySelector('[name="Profile.HospitalCode"]').value = '';
+            document.querySelector('[name="Profile.ShortName"]').value = '';
+            document.querySelector('[name="Profile.ContactPhone"]').value = '';
+            document.querySelector('[name="Profile.ContactEmail"]').value = '';
+            document.querySelector('[name="Profile.Logo"]').value = '';
+            document.querySelector('[name="Profile.Address"]').value = '';
+            document.querySelector('[name="Profile.Description"]').value = '';
+            document.querySelector('[name="Profile.IsActive"]').checked = true;
+            
+            // 清除错误消息
+            var validationSummary = document.querySelector('.modal-body .alert-danger');
+            if (validationSummary) {
+                validationSummary.style.display = 'none';
+            }
+            document.querySelectorAll('.text-danger').forEach(function(el) {
+                el.textContent = '';
+            });
+        }
+
+        function editProfile(id) {
+            // 使用 AJAX 获取数据
+            fetch(`/Admin/HospitalProfiles?handler=GetProfile&id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        document.getElementById('Profile_Id').value = data.id || '0';
+                        document.querySelector('[name="Profile.HospitalName"]').value = data.hospitalName || '';
+                        document.querySelector('[name="Profile.HospitalCode"]').value = data.hospitalCode || '';
+                        document.querySelector('[name="Profile.ShortName"]').value = data.shortName || '';
+                        document.querySelector('[name="Profile.ContactPhone"]').value = data.contactPhone || '';
+                        document.querySelector('[name="Profile.ContactEmail"]').value = data.contactEmail || '';
+                        document.querySelector('[name="Profile.Logo"]').value = data.logo || '';
+                        document.querySelector('[name="Profile.Address"]').value = data.address || '';
+                        document.querySelector('[name="Profile.Description"]').value = data.description || '';
+                        document.querySelector('[name="Profile.IsActive"]').checked = data.isActive;
+                        
+                        var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                        editModal.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('获取数据失败:', error);
+                    alert('获取数据失败，请稍后重试');
+                });
+        }
+
+        function confirmDelete(id, name) {
+            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteHospitalName').textContent = name;
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+    </script>
+}

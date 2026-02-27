@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using LisReportServer.Data;
+using LisReportServer.Models;
 using System.Diagnostics;
 
 namespace LisReportServer.Services
@@ -7,18 +8,18 @@ namespace LisReportServer.Services
     public class HealthCheckService : IHealthCheckService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IHospitalServerConfigService _hospitalServerConfigService;
+        private readonly IHospitalProfileService _hospitalProfileService;
         private readonly ITokenBlacklistService _tokenBlacklistService;
         private readonly ILogger<HealthCheckService> _logger;
 
         public HealthCheckService(
             ApplicationDbContext context, 
-            IHospitalServerConfigService hospitalServerConfigService,
+            IHospitalProfileService hospitalProfileService,
             ITokenBlacklistService tokenBlacklistService,
             ILogger<HealthCheckService> logger)
         {
             _context = context;
-            _hospitalServerConfigService = hospitalServerConfigService;
+            _hospitalProfileService = hospitalProfileService;
             _tokenBlacklistService = tokenBlacklistService;
             _logger = logger;
         }
@@ -43,7 +44,7 @@ namespace LisReportServer.Services
                 var dbStatus = await CheckDatabaseHealthAsync();
                 healthStatus.Components["database"] = dbStatus;
 
-                // 检查医院服务器配置服务
+                // 检查医院配置服务
                 var configServiceStatus = await CheckConfigServiceHealthAsync();
                 healthStatus.Components["hospital_config_service"] = configServiceStatus;
 
@@ -114,13 +115,13 @@ namespace LisReportServer.Services
         {
             try
             {
-                // 尝试获取配置数量来测试服务
-                var configs = await _hospitalServerConfigService.GetAllConfigsAsync();
+                // 尝试获取医院配置数量来测试服务
+                var configs = await _hospitalProfileService.GetAllAsync();
                 return new Dictionary<string, object>
                 {
                     { "status", "Healthy" },
                     { "config_count", configs.Count },
-                    { "message", "Hospital server config service is responsive" }
+                    { "message", "Hospital profile service is responsive" }
                 };
             }
             catch (Exception ex)
@@ -130,7 +131,7 @@ namespace LisReportServer.Services
                 {
                     { "status", "Unhealthy" },
                     { "error", ex.Message },
-                    { "message", "Hospital server config service is not responsive" }
+                    { "message", "Hospital profile service is not responsive" }
                 };
             }
         }

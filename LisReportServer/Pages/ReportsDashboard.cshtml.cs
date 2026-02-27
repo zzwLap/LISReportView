@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Authorization;
 using LisReportServer.Services;
 
 namespace LisReportServer.Pages
 {
+    [Authorize]  // 需要登录
     public class ReportsDashboardModel : PageModel
     {
         private readonly IReportService _reportService;

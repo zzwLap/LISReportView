@@ -1,0 +1,535 @@
+@page
+@model LisReportServer.Pages.Admin.HospitalServiceConfigsModel
+@{
+    ViewData["Title"] = "服务配置管理";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>@ViewData["Title"]</h2>
+        </div>
+    </div>
+
+    <!-- 成功/错误消息 -->
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- 筛选和操作区域 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">所属医院</label>
+                    <select asp-for="HospitalId" class="form-select" onchange="this.form.submit()">
+                        <option value="">全部医院</option>
+                        @foreach (var hospital in Model.Hospitals)
+                        {
+                            <option value="@hospital.Id">@hospital.HospitalName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">服务类别</label>
+                    <select asp-for="Category" class="form-select" onchange="this.form.submit()">
+                        <option value="">全部类别</option>
+                        @foreach (var category in Model.ServiceCategories)
+                        {
+                            <option value="@category">@category</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">搜索</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" asp-for="SearchTerm" placeholder="搜索服务名称、地址、发现键值..." />
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <a href="/Admin/HospitalServiceConfigs" class="btn btn-secondary me-2">
+                        <i class="bi bi-x-circle"></i> 清除筛选
+                    </a>
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editModal" onclick="clearForm()">
+                        <i class="bi bi-plus-circle"></i> 新增服务配置
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 服务配置列表 -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">服务配置列表 (共 @Model.ServiceConfigs.Count 条)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>医院</th>
+                            <th>服务名称</th>
+                            <th>服务类别</th>
+                            <th>服务发现键值</th>
+                            <th>服务地址</th>
+                            <th>端口</th>
+                            <th>优先级</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.ServiceConfigs.Any())
+                        {
+                            <tr>
+                                <td colspan="11" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1"></i>
+                                    <p class="mt-2">暂无服务配置数据</p>
+                                    <small>点击"新增服务配置"开始创建</small>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var config in Model.ServiceConfigs)
+                            {
+                                <tr>
+                                    <td>@config.Id</td>
+                                    <td>
+                                        <strong>@(config.HospitalProfile?.HospitalName ?? "未知")</strong>
+                                    </td>
+                                    <td>
+                                        <strong>@config.ServiceName</strong>
+                                        @if (!string.IsNullOrEmpty(config.Description))
+                                        {
+                                            <br /><small class="text-muted">@config.Description</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            var categoryClass = config.ServiceCategory switch
+                                            {
+                                                "LIS系统" => "bg-primary",
+                                                "HIS系统" => "bg-success",
+                                                "PACS系统" => "bg-info",
+                                                "RIS系统" => "bg-warning",
+                                                "EMR系统" => "bg-purple",
+                                                "检验系统" => "bg-primary",
+                                                "影像系统" => "bg-info",
+                                                "药房系统" => "bg-success",
+                                                "收费系统" => "bg-warning",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @categoryClass">@config.ServiceCategory</span>
+                                    </td>
+                                    <td><code>@config.ServiceDiscoveryKey</code></td>
+                                    <td>
+                                        <small>@config.ServiceAddress</small>
+                                    </td>
+                                    <td class="text-center">@(config.ServicePort?.ToString() ?? "-")</td>
+                                    <td class="text-center">@config.Priority</td>
+                                    <td>
+                                        @if (config.IsActive)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> 启用</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> 禁用</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@config.CreatedAt.ToString("yyyy-MM-dd HH:mm")</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary" onclick="editServiceConfig(@config.Id)" title="编辑">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <form method="post" asp-page-handler="TestConnection" class="d-inline">
+                                                <input type="hidden" name="id" value="@config.Id" />
+                                                <button type="submit" class="btn btn-outline-info" title="测试连接">
+                                                    <i class="bi bi-plug"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-page-handler="ToggleStatus" class="d-inline">
+                                                <input type="hidden" name="id" value="@config.Id" />
+                                                <button type="submit" class="btn btn-outline-@(config.IsActive ? "warning" : "success")" title="@(config.IsActive ? "禁用" : "启用")">
+                                                    <i class="bi bi-toggle-@(config.IsActive ? "on" : "off")"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(@config.Id, '@config.ServiceName')" title="删除">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑/新增模态框 -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(Model.EditId.HasValue ? "编辑服务配置" : "新增服务配置")</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="ServiceConfig.Id" />
+                    
+                    <!-- 错误消息显示在模态框内 -->
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display: none;"></div>
+
+                    <!-- 基础信息组 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong><i class="bi bi-info-circle"></i> 基础信息</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="ServiceConfig.HospitalProfileId" class="form-label"></label>
+                                    <select asp-for="ServiceConfig.HospitalProfileId" class="form-select" required>
+                                        <option value="">请选择医院</option>
+                                        @foreach (var hospital in Model.Hospitals)
+                                        {
+                                            <option value="@hospital.Id">@hospital.HospitalName</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="ServiceConfig.HospitalProfileId" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="ServiceConfig.ServiceName" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.ServiceName" class="form-control" required placeholder="如：LIS检验系统" />
+                                    <span asp-validation-for="ServiceConfig.ServiceName" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="ServiceConfig.ServiceCategory" class="form-label"></label>
+                                    <select asp-for="ServiceConfig.ServiceCategory" class="form-select" required>
+                                        <option value="">请选择服务类别</option>
+                                        @foreach (var category in Model.ServiceCategories)
+                                        {
+                                            <option value="@category">@category</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="ServiceConfig.ServiceCategory" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="ServiceConfig.ServiceDiscoveryKey" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.ServiceDiscoveryKey" class="form-control" required placeholder="如：lis.main.service" />
+                                    <small class="text-muted">建议格式：系统.模块.服务</small>
+                                    <span asp-validation-for="ServiceConfig.ServiceDiscoveryKey" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 连接配置组 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong><i class="bi bi-link-45deg"></i> 连接配置</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label asp-for="ServiceConfig.ServiceAddress" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.ServiceAddress" class="form-control" required placeholder="如：http://192.168.1.100" />
+                                    <span asp-validation-for="ServiceConfig.ServiceAddress" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-2">
+                                    <label asp-for="ServiceConfig.ServicePort" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.ServicePort" class="form-control" type="number" min="1" max="65535" placeholder="8080" />
+                                    <span asp-validation-for="ServiceConfig.ServicePort" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-2">
+                                    <label asp-for="ServiceConfig.ApiVersion" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.ApiVersion" class="form-control" placeholder="v1.0" />
+                                    <span asp-validation-for="ServiceConfig.ApiVersion" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 认证配置组 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong><i class="bi bi-shield-lock"></i> 认证配置（可选）</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label asp-for="ServiceConfig.AuthType" class="form-label"></label>
+                                    <select asp-for="ServiceConfig.AuthType" class="form-select" id="authTypeSelect" onchange="toggleAuthFields()">
+                                        <option value="">无认证</option>
+                                        @foreach (var authType in Model.AuthTypes)
+                                        {
+                                            <option value="@authType">@authType</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="ServiceConfig.AuthType" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-3" id="usernameField" style="display: none;">
+                                    <label asp-for="ServiceConfig.Username" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.Username" class="form-control" />
+                                    <span asp-validation-for="ServiceConfig.Username" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-3" id="passwordField" style="display: none;">
+                                    <label asp-for="ServiceConfig.EncryptedPassword" class="form-label">密码</label>
+                                    <input asp-for="ServiceConfig.EncryptedPassword" class="form-control" type="password" />
+                                    <span asp-validation-for="ServiceConfig.EncryptedPassword" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6" id="apiKeyField" style="display: none;">
+                                    <label asp-for="ServiceConfig.ApiKey" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.ApiKey" class="form-control" />
+                                    <span asp-validation-for="ServiceConfig.ApiKey" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 高级配置组 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong><i class="bi bi-gear"></i> 高级配置（可选）</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label asp-for="ServiceConfig.Timeout" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.Timeout" class="form-control" type="number" min="1" max="300" placeholder="30" />
+                                    <small class="text-muted">1-300秒</small>
+                                    <span asp-validation-for="ServiceConfig.Timeout" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="ServiceConfig.RetryCount" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.RetryCount" class="form-control" type="number" min="0" max="10" placeholder="3" />
+                                    <small class="text-muted">0-10次</small>
+                                    <span asp-validation-for="ServiceConfig.RetryCount" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="ServiceConfig.Priority" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.Priority" class="form-control" type="number" min="0" max="100" placeholder="50" />
+                                    <small class="text-muted">0-100，数字越大越优先</small>
+                                    <span asp-validation-for="ServiceConfig.Priority" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-3"></div>
+                                <div class="col-md-12">
+                                    <label asp-for="ServiceConfig.HealthCheckUrl" class="form-label"></label>
+                                    <input asp-for="ServiceConfig.HealthCheckUrl" class="form-control" placeholder="/health" />
+                                    <span asp-validation-for="ServiceConfig.HealthCheckUrl" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 其他配置组 -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong><i class="bi bi-file-text"></i> 其他配置</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label asp-for="ServiceConfig.Description" class="form-label"></label>
+                                    <textarea asp-for="ServiceConfig.Description" class="form-control" rows="3" placeholder="请输入服务描述信息..."></textarea>
+                                    <span asp-validation-for="ServiceConfig.Description" class="text-danger"></span>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input asp-for="ServiceConfig.IsActive" class="form-check-input" type="checkbox" />
+                                        <label asp-for="ServiceConfig.IsActive" class="form-check-label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> 取消
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">确认删除</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除服务配置 <strong id="deleteServiceName"></strong> 吗？</p>
+                    <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> 此操作不可恢复！</p>
+                    <input type="hidden" name="DeleteId" id="deleteId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> 确认删除
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // 如果有编辑ID或需要保持模态框打开，自动打开编辑模态框
+        @if (Model.EditId.HasValue || Model.KeepModalOpen)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                editModal.show();
+                
+                // 如果有验证错误，显示错误消息
+                var validationSummary = document.querySelector('.modal-body .alert-danger');
+                if (validationSummary && validationSummary.querySelector('ul')) {
+                    validationSummary.style.display = 'block';
+                }
+                
+                // 根据认证类型显示相应字段
+                toggleAuthFields();
+            });
+            </text>
+        }
+
+        function clearForm() {
+            document.getElementById('ServiceConfig_Id').value = '0';
+            document.querySelector('[name="ServiceConfig.HospitalProfileId"]').value = '';
+            document.querySelector('[name="ServiceConfig.ServiceName"]').value = '';
+            document.querySelector('[name="ServiceConfig.ServiceCategory"]').value = '';
+            document.querySelector('[name="ServiceConfig.ServiceDiscoveryKey"]').value = '';
+            document.querySelector('[name="ServiceConfig.ServiceAddress"]').value = '';
+            document.querySelector('[name="ServiceConfig.ServicePort"]').value = '';
+            document.querySelector('[name="ServiceConfig.ApiVersion"]').value = '';
+            document.querySelector('[name="ServiceConfig.AuthType"]').value = '';
+            document.querySelector('[name="ServiceConfig.Username"]').value = '';
+            document.querySelector('[name="ServiceConfig.EncryptedPassword"]').value = '';
+            document.querySelector('[name="ServiceConfig.ApiKey"]').value = '';
+            document.querySelector('[name="ServiceConfig.Timeout"]').value = '';
+            document.querySelector('[name="ServiceConfig.RetryCount"]').value = '';
+            document.querySelector('[name="ServiceConfig.Priority"]').value = '50';
+            document.querySelector('[name="ServiceConfig.HealthCheckUrl"]').value = '';
+            document.querySelector('[name="ServiceConfig.Description"]').value = '';
+            document.querySelector('[name="ServiceConfig.IsActive"]').checked = true;
+            
+            // 清除错误消息
+            var validationSummary = document.querySelector('.modal-body .alert-danger');
+            if (validationSummary) {
+                validationSummary.style.display = 'none';
+            }
+            document.querySelectorAll('.text-danger').forEach(function(el) {
+                el.textContent = '';
+            });
+            
+            // 隐藏认证字段
+            toggleAuthFields();
+        }
+
+        function editServiceConfig(id) {
+            // 使用 AJAX 获取数据
+            fetch(`/Admin/HospitalServiceConfigs?handler=GetServiceConfig&id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        document.getElementById('ServiceConfig_Id').value = data.id || '0';
+                        document.querySelector('[name="ServiceConfig.HospitalProfileId"]').value = data.hospitalProfileId || '';
+                        document.querySelector('[name="ServiceConfig.ServiceName"]').value = data.serviceName || '';
+                        document.querySelector('[name="ServiceConfig.ServiceCategory"]').value = data.serviceCategory || '';
+                        document.querySelector('[name="ServiceConfig.ServiceDiscoveryKey"]').value = data.serviceDiscoveryKey || '';
+                        document.querySelector('[name="ServiceConfig.ServiceAddress"]').value = data.serviceAddress || '';
+                        document.querySelector('[name="ServiceConfig.ServicePort"]').value = data.servicePort || '';
+                        document.querySelector('[name="ServiceConfig.ApiVersion"]').value = data.apiVersion || '';
+                        document.querySelector('[name="ServiceConfig.AuthType"]').value = data.authType || '';
+                        document.querySelector('[name="ServiceConfig.Username"]').value = data.username || '';
+                        document.querySelector('[name="ServiceConfig.EncryptedPassword"]').value = data.encryptedPassword || '';
+                        document.querySelector('[name="ServiceConfig.ApiKey"]').value = data.apiKey || '';
+                        document.querySelector('[name="ServiceConfig.Timeout"]').value = data.timeout || '';
+                        document.querySelector('[name="ServiceConfig.RetryCount"]').value = data.retryCount || '';
+                        document.querySelector('[name="ServiceConfig.Priority"]').value = data.priority || 50;
+                        document.querySelector('[name="ServiceConfig.HealthCheckUrl"]').value = data.healthCheckUrl || '';
+                        document.querySelector('[name="ServiceConfig.Description"]').value = data.description || '';
+                        document.querySelector('[name="ServiceConfig.IsActive"]').checked = data.isActive;
+                        
+                        // 根据认证类型显示相应字段
+                        toggleAuthFields();
+                        
+                        var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                        editModal.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('获取数据失败:', error);
+                    alert('获取数据失败，请稍后重试');
+                });
+        }
+
+        function toggleAuthFields() {
+            var authType = document.getElementById('authTypeSelect').value;
+            var usernameField = document.getElementById('usernameField');
+            var passwordField = document.getElementById('passwordField');
+            var apiKeyField = document.getElementById('apiKeyField');
+
+            // 隐藏所有字段
+            usernameField.style.display = 'none';
+            passwordField.style.display = 'none';
+            apiKeyField.style.display = 'none';
+
+            // 根据认证类型显示相应字段
+            if (authType === 'Basic') {
+                usernameField.style.display = 'block';
+                passwordField.style.display = 'block';
+            } else if (authType === 'ApiKey') {
+                apiKeyField.style.display = 'block';
+            } else if (authType === 'OAuth2' || authType === 'Bearer') {
+                usernameField.style.display = 'block';
+                apiKeyField.style.display = 'block';
+            }
+        }
+
+        function confirmDelete(id, name) {
+            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteServiceName').textContent = name;
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+    </script>
+}
