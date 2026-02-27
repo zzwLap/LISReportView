@@ -2,7 +2,9 @@
 @model IndexModel
 @{
     ViewData["Title"] = "首页";
-    Layout = Model.Layout;
+    // 检查是否是内容模式（用于标签页iframe加载）
+    var isContentMode = Request.Query.ContainsKey("content") && Request.Query["content"].ToString().ToLower() == "true";
+    Layout = isContentMode ? "_ContentLayout" : "_Layout";
 }
 
 <div class="jumbotron text-center py-5">
@@ -19,11 +21,11 @@
     <hr class="my-4">
     @if (User.Identity?.IsAuthenticated == true)
     {
-        <a class="btn btn-primary btn-lg" asp-page="/Dashboard" role="button">进入系统仪表板</a>
+        <a class="btn btn-primary btn-lg" asp-page="/Dashboard" data-title="仪表板" role="button">进入系统仪表板</a>
     }
     else
     {
-        <a class="btn btn-primary btn-lg" asp-page="/Login" role="button">登录系统</a>
+        <a class="btn btn-primary btn-lg" asp-page="/Login" data-title="登录" role="button">登录系统</a>
     }
 </div>
 

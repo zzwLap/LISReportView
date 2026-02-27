@@ -10,7 +10,7 @@ public class IndexModel : PageModel
     public IActionResult OnGet()
     {
         // 检查是否是内容模式（用于标签页iframe加载）
-        if (Request.Query.ContainsKey("content") && Request.Query["content"] == "true")
+        if (Request.Query.ContainsKey("content") && Request.Query["content"].ToString().ToLower() == "true")
         {
             Layout = "_ContentLayout";
         }

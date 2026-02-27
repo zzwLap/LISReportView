@@ -1,7 +1,7 @@
 {
   "status": "Degraded",
-  "checkedAtUtc": "2026-02-27T16:30:32.34911Z",
-  "checkedAtLocal": "2026-02-28T00:30:32.3458244+08:00",
+  "checkedAtUtc": "2026-02-27T16:48:11.729995Z",
+  "checkedAtLocal": "2026-02-28T00:48:11.7280436+08:00",
   "timezoneOffset": "\u002B08:00",
   "serviceName": "LIS Report Server",
   "version": "1.0.0",
@@ -35,11 +35,11 @@
     },
     "application": {
       "status": "Healthy",
-      "uptime": "00:00:01.1278087",
-      "thread_count": 42,
-      "process_id": 34324,
+      "uptime": "00:00:01.0608696",
+      "thread_count": 43,
+      "process_id": 35692,
       "message": "Application is running normally"
     }
   },
-  "timestamp": "2026-02-27T16:30:32.5631402Z"
+  "timestamp": "2026-02-27T16:48:11.9391502Z"
 }

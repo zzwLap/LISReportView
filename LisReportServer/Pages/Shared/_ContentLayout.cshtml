@@ -66,6 +66,86 @@
     <script src="~/js/timezone-helper.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+    <script>
+        // 自动将内部链接转换为标签页打开
+        $(document).ready(function() {
+            // 将相对路径转换为绝对路径
+            function resolveUrl(href) {
+                if (!href) return href;
+                // 如果已经是绝对路径，直接返回
+                if (href.startsWith('/') || href.startsWith('http://') || href.startsWith('https://')) {
+                    return href;
+                }
+                // 解析相对路径
+                var a = document.createElement('a');
+                a.href = href;
+                return a.pathname;
+            }
+            
+            // 检查是否是需要跳转的页面（登录、退出等）
+            function isRedirectPage(url) {
+                var redirectPages = ['/Login', '/Logout', '/Account/Login', '/Account/Logout'];
+                var pathname = resolveUrl(url);
+                return redirectPages.some(function(page) {
+                    return pathname === page || pathname.startsWith(page + '?');
+                });
+            }
+            
+            // 处理所有链接点击
+            $(document).on('click', 'a[href]', function(e) {
+                var $link = $(this);
+                var href = $link.attr('href');
+                
+                // 忽略特殊链接
+                if (!href || href === '#' || href.startsWith('javascript:') || 
+                    href.startsWith('http://') || href.startsWith('https://') || 
+                    href.startsWith('mailto:') || href.startsWith('tel:') ||
+                    $link.attr('target') === '_blank' ||
+                    $link.hasClass('no-tab')) {
+                    return;
+                }
+                
+                // 获取绝对路径
+                var absoluteUrl = resolveUrl(href);
+                
+                // 检查是否是跳转页面（登录、退出）
+                if (isRedirectPage(absoluteUrl)) {
+                    // 让这些页面正常跳转（不在标签页中打开）
+                    return;
+                }
+                
+                // 检查是否在iframe中
+                if (window.self !== window.top && window.parent.tabManager) {
+                    e.preventDefault();
+                    
+                    // 获取链接标题（优先使用data-title属性，否则使用文本内容）
+                    var title = $link.data('title') || $link.text().trim() || '新标签页';
+                    
+                    // 在父窗口标签页中打开
+                    window.parent.tabManager.openTab(title, absoluteUrl);
+                }
+            });
+            
+            // 处理表单提交（保持在当前iframe中）
+            $(document).on('submit', 'form', function(e) {
+                if (window.self !== window.top) {
+                    // 在iframe中，添加content参数保持简化布局
+                    var $form = $(this);
+                    var action = $form.attr('action') || window.location.pathname;
+                    
+                    // 如果action不包含content参数，添加它
+                    if (!action.includes('content=true')) {
+                        if (action.includes('?')) {
+                            $form.attr('action', action + '&content=true');
+                        } else {
+                            $form.attr('action', action + '?content=true');
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
