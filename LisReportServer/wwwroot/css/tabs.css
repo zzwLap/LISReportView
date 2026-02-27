@@ -1,0 +1,280 @@
+/* 标签页样式 */
+.tab-container {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    height: 40px;
+    position: relative;
+}
+
+.tab-scroll-left,
+.tab-scroll-right {
+    width: 30px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #f8f9fa;
+    border: none;
+    border-right: 1px solid #dee2e6;
+    color: #6c757d;
+    transition: all 0.2s;
+}
+
+.tab-scroll-right {
+    border-right: none;
+    border-left: 1px solid #dee2e6;
+}
+
+.tab-scroll-left:hover,
+.tab-scroll-right:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.tab-scroll-left.hidden,
+.tab-scroll-right.hidden {
+    display: none;
+}
+
+.tab-list {
+    flex: 1;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.tab-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.tab-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    min-width: 120px;
+    max-width: 200px;
+    position: relative;
+}
+
+.tab-item:hover {
+    background: #e9ecef;
+}
+
+.tab-item.active {
+    background: #fff;
+    border-bottom: 2px solid #0d6efd;
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.tab-item.home-tab {
+    min-width: 80px;
+}
+
+.tab-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.tab-close {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
+    color: #6c757d;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.tab-close:hover {
+    background: #dc3545;
+    color: #fff;
+}
+
+.tab-item.home-tab .tab-close {
+    display: none;
+}
+
+/* 标签页内容区域 */
+.tab-content-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-content {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: none;
+    padding: 0;
+}
+
+.tab-content.active {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.tab-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* 页面布局调整 */
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    flex-shrink: 0;
+}
+
+.footer {
+    flex-shrink: 0;
+    padding: 10px 0;
+    text-align: center;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .tab-item {
+        min-width: 100px;
+        padding: 8px 12px;
+    }
+    
+    .tab-title {
+        max-width: 80px;
+    }
+}
+
+/* 标签页菜单按钮 */
+.tab-menu-btn {
+    padding: 4px 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    border-radius: 4px;
+    margin-left: 4px;
+}
+
+.tab-menu-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+/* 下拉菜单样式 */
+.tab-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1050;
+    min-width: 150px;
+    display: none;
+}
+
+.tab-dropdown-menu.show {
+    display: block;
+}
+
+.tab-dropdown-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.tab-dropdown-item:hover {
+    background: #f8f9fa;
+}
+
+/* 标签页左侧图标 */
+.tab-icon {
+    margin-right: 6px;
+    font-size: 14px;
+}
+
+/* 新标签按钮 */
+.tab-new-btn {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: none;
+    border-right: 1px solid #dee2e6;
+    cursor: pointer;
+    color: #6c757d;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-new-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+/* 标签页工具栏 */
+.tab-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    background: #f8f9fa;
+    border-left: 1px solid #dee2e6;
+}
+
+.tab-toolbar-btn {
+    padding: 4px 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    border-radius: 4px;
+    margin: 0 2px;
+    font-size: 12px;
+}
+
+.tab-toolbar-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}

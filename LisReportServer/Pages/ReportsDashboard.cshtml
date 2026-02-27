@@ -2,7 +2,9 @@
 @model ReportsDashboardModel
 @{
     ViewData["Title"] = "检查报告管理";
-    Layout = "_Layout";
+    // 检查是否是内容模式（用于标签页iframe加载）
+    var isContentMode = Request.Query.ContainsKey("content") && Request.Query["content"] == "true";
+    Layout = isContentMode ? "_ContentLayout" : "_Layout";
 }
 
 <div class="container-fluid mt-4">

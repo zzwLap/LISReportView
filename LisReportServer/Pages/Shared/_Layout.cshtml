@@ -10,28 +10,28 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/timezone-styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/LisReportServer.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tabs.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">检查报告系统</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#" onclick="tabManager.openTab('首页', '/Index'); return false;">检查报告系统</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">系统首页</a>
+                            <a class="nav-link text-dark" href="#" onclick="tabManager.openTab('首页', '/Index'); return false;">系统首页</a>
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Dashboard">仪表板</a>
+                                <a class="nav-link text-dark" href="#" onclick="tabManager.openTab('仪表板', '/Dashboard'); return false;">仪表板</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/ReportsDashboard">检查报告</a>
+                                <a class="nav-link text-dark" href="#" onclick="tabManager.openTab('检查报告', '/ReportsDashboard'); return false;">检查报告</a>
                             </li>
                             @if (User.IsInRole("Admin") || User.Identity.Name == "admin")
                             {
@@ -40,13 +40,13 @@
                                         系统配置
                                     </a>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" asp-area="" asp-page="/Admin/HospitalProfiles">医院配置管理</a></li>
-                                        <li><a class="dropdown-item" asp-area="" asp-page="/Admin/HospitalServiceConfigs">服务配置管理</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="tabManager.openTab('医院配置管理', '/Admin/HospitalProfiles'); return false;">医院配置管理</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="tabManager.openTab('服务配置管理', '/Admin/HospitalServiceConfigs'); return false;">服务配置管理</a></li>
                                     </ul>
                                 </li>
                             }
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/HealthStatus">健康状态</a>
+                                <a class="nav-link text-dark" href="#" onclick="tabManager.openTab('健康状态', '/HealthStatus'); return false;">健康状态</a>
                             </li>
                         }
                     </ul>
@@ -74,23 +74,45 @@
                 </div>
             </div>
         </nav>
+        
+        <!-- 标签页栏 -->
+        <div id="tab-container" class="tab-container">
+            <div class="tab-scroll-left" onclick="tabManager.scrollTabs('left')"><i class="bi bi-chevron-left"></i></div>
+            <div class="tab-list" id="tab-list">
+                <!-- 标签页将在这里动态生成 -->
+            </div>
+            <div class="tab-scroll-right" onclick="tabManager.scrollTabs('right')"><i class="bi bi-chevron-right"></i></div>
+        </div>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    
+    <!-- 标签页内容区域 -->
+    <div id="tab-content-container" class="tab-content-container">
+        <!-- 内容将在这里动态生成 -->
     </div>
-
-    <footer class="border-top footer text-muted">
+    
+    <!-- 调用 IgnoreBody 避免 Razor 错误（我们使用标签页系统显示内容） -->
+    @{ IgnoreBody(); }
+    
+    <div class="border-top footer text-muted">
         <div class="container">
             &copy; 2026 - 检查报告系统 - <a asp-area="" asp-page="/Privacy">隐私</a>
         </div>
-    </footer>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/tabs.js" asp-append-version="true"></script>
     <script src="~/js/timezone-helper.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // 初始化标签页管理器
+        $(document).ready(function() {
+            tabManager.init();
+            // 默认打开首页
+            tabManager.openTab('首页', '/Index');
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

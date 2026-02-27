@@ -1,7 +1,7 @@
 {
   "status": "Degraded",
-  "checkedAtUtc": "2026-02-27T15:43:01.2269569Z",
-  "checkedAtLocal": "2026-02-27T23:43:01.2248255+08:00",
+  "checkedAtUtc": "2026-02-27T16:30:32.34911Z",
+  "checkedAtLocal": "2026-02-28T00:30:32.3458244+08:00",
   "timezoneOffset": "\u002B08:00",
   "serviceName": "LIS Report Server",
   "version": "1.0.0",
@@ -22,8 +22,8 @@
     },
     "memory": {
       "status": "Healthy",
-      "process_used_mb": 106,
-      "message": "Process memory usage is 106 MB"
+      "process_used_mb": 108,
+      "message": "Process memory usage is 108 MB"
     },
     "disk_space": {
       "status": "Degraded",
@@ -35,11 +35,11 @@
     },
     "application": {
       "status": "Healthy",
-      "uptime": "00:00:01.4784341",
-      "thread_count": 33,
-      "process_id": 38488,
+      "uptime": "00:00:01.1278087",
+      "thread_count": 42,
+      "process_id": 34324,
       "message": "Application is running normally"
     }
   },
-  "timestamp": "2026-02-27T15:43:01.5644738Z"
+  "timestamp": "2026-02-27T16:30:32.5631402Z"
 }

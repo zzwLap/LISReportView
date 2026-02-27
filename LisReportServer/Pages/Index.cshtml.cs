@@ -5,11 +5,16 @@ namespace LisReportServer.Pages;
 
 public class IndexModel : PageModel
 {
+    public string Layout { get; set; } = "_Layout";
+
     public IActionResult OnGet()
     {
-        // 首页现在支持显示已登录和未登录两种状态
-        // 如果用户已登录，可以在页面上显示进入仪表板的按钮
-        // 不再直接重定向，而是显示首页内容
+        // 检查是否是内容模式（用于标签页iframe加载）
+        if (Request.Query.ContainsKey("content") && Request.Query["content"] == "true")
+        {
+            Layout = "_ContentLayout";
+        }
+        
         return Page();
     }
 }

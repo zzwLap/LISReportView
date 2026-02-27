@@ -2,7 +2,9 @@
 @model HealthStatusModel
 @{
     ViewData["Title"] = "系统健康状态";
-    Layout = "_Layout";
+    // 检查是否是内容模式（用于标签页iframe加载）
+    var isContentMode = Request.Query.ContainsKey("content") && Request.Query["content"] == "true";
+    Layout = isContentMode ? "_ContentLayout" : "_Layout";
 }
 
 <div class="container mt-4">
