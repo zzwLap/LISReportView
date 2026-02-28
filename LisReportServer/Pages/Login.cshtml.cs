@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
 using LisReportServer.Services;
+using LisReportServer.Helpers;
 
 namespace LisReportServer.Pages
 {
@@ -87,6 +88,21 @@ namespace LisReportServer.Pages
             // 检查模型状态
             if (ModelState.IsValid)
             {
+                // 解密密码（假设前端已经加密）
+                string actualPassword;
+                try
+                {
+                    // 尝试解密，如果失败则认为是明文（兼容旧版本）
+                    actualPassword = CryptoHelper.Decrypt(Input.Password);
+                    _logger.LogDebug("密码已解密");
+                }
+                catch
+                {
+                    // 如果解密失败，说明前端没有加密，直接使用原始密码
+                    actualPassword = Input.Password;
+                    _logger.LogWarning("密码未加密，建议前端启用加密传输");
+                }
+
                 // 根据医院名称决定使用本地验证还是第三方验证
                 bool isValidUser;
                 List<string> userRoles = new List<string>();
@@ -96,7 +112,7 @@ namespace LisReportServer.Pages
                     // 使用本地数据库验证
                     var authResult = await _userAuthenticationService.AuthenticateAsync(
                         Input.Username, 
-                        Input.Password, 
+                        actualPassword,  // 使用解密后的密码
                         Input.HospitalName);
 
                     if (authResult.Success && authResult.User != null)
@@ -118,7 +134,7 @@ namespace LisReportServer.Pages
                     var thirdPartyResult = await _thirdPartyLoginService.AuthenticateAsync(
                         Input.HospitalName, 
                         Input.Username, 
-                        Input.Password);
+                        actualPassword);  // 使用解密后的密码
                     
                     if (thirdPartyResult.Success)
                     {
