@@ -61,6 +61,9 @@ builder.Services.AddScoped<IHospitalServiceConfigService, HospitalServiceConfigS
 // 添加第三方登录服务
 builder.Services.AddScoped<IThirdPartyLoginService, ThirdPartyLoginService>();
 
+// 添加LIS Token缓存服务
+builder.Services.AddScoped<ILisTokenCacheService, LisTokenCacheService>();
+
 // 添加健康检查服务
 builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
 

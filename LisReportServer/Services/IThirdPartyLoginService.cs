@@ -17,6 +17,21 @@ namespace LisReportServer.Services
         Task<ThirdPartyLoginResult> AuthenticateAsync(string hospitalName, string username, string password);
 
         /// <summary>
+        /// 清除用户的LIS登录Token缓存
+        /// </summary>
+        /// <param name="hospitalName">医院名称</param>
+        /// <param name="username">用户名</param>
+        Task ClearUserTokenAsync(string hospitalName, string username);
+
+        /// <summary>
+        /// 获取用户的LIS登录Token
+        /// </summary>
+        /// <param name="hospitalName">医院名称</param>
+        /// <param name="username">用户名</param>
+        /// <returns>Token信息</returns>
+        Task<LisTokenInfo?> GetUserTokenAsync(string hospitalName, string username);
+
+        /// <summary>
         /// 测试第三方API连接
         /// </summary>
         /// <param name="hospitalName">医院名称</param>

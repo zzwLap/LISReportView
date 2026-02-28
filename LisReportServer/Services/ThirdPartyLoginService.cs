@@ -12,17 +12,20 @@ namespace LisReportServer.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IHospitalServiceConfigService _serviceConfigService;
         private readonly IHospitalProfileService _profileService;
+        private readonly ILisTokenCacheService _tokenCacheService;
         private readonly ILogger<ThirdPartyLoginService> _logger;
 
         public ThirdPartyLoginService(
             IHttpClientFactory httpClientFactory,
             IHospitalServiceConfigService serviceConfigService,
             IHospitalProfileService profileService,
+            ILisTokenCacheService tokenCacheService,
             ILogger<ThirdPartyLoginService> logger)
         {
             _httpClientFactory = httpClientFactory;
             _serviceConfigService = serviceConfigService;
             _profileService = profileService;
+            _tokenCacheService = tokenCacheService;
             _logger = logger;
         }
 
@@ -42,21 +45,23 @@ namespace LisReportServer.Services
                     };
                 }
 
-                // 2. 获取该医院的登录服务配置
-                var loginServiceConfig = await _serviceConfigService.GetByDiscoveryKeyAsync(hospital.Id, "LoginSystem");
-                if (loginServiceConfig == null || !loginServiceConfig.IsActive)
+                // 2. 获取该医院的LIS服务配置（根据ServiceCategory分类）
+                var lisServiceConfig = await _serviceConfigService.GetByCategoryAsync(ServiceCategory.LIS)
+                    .ContinueWith(t => t.Result.FirstOrDefault(s => s.HospitalProfileId == hospital.Id && s.IsActive));
+                
+                if (lisServiceConfig == null)
                 {
-                    _logger.LogWarning("医院 {HospitalName} 未配置登录服务或服务未启用", hospitalName);
+                    _logger.LogWarning("医院 {HospitalName} 未配置LIS服务或服务未启用", hospitalName);
                     return new ThirdPartyLoginResult
                     {
                         Success = false,
-                        ErrorMessage = $"医院 '{hospitalName}' 未配置第三方登录服务"
+                        ErrorMessage = $"医院 '{hospitalName}' 未配置LIS系统服务"
                     };
                 }
 
                 // 3. 构建请求URL
-                string apiUrl = BuildApiUrl(loginServiceConfig);
-                _logger.LogInformation("调用第三方登录API: {Url}", apiUrl);
+                string apiUrl = BuildApiUrl(lisServiceConfig);
+                _logger.LogInformation("调用LIS登录API: {Url}", apiUrl);
 
                 // 4. 构建请求体
                 var requestBody = new ThirdPartyLoginRequest
@@ -72,25 +77,25 @@ namespace LisReportServer.Services
                 var httpClient = _httpClientFactory.CreateClient();
                 
                 // 设置超时时间
-                if (loginServiceConfig.Timeout.HasValue)
+                if (lisServiceConfig.Timeout.HasValue)
                 {
-                    httpClient.Timeout = TimeSpan.FromSeconds(loginServiceConfig.Timeout.Value);
+                    httpClient.Timeout = TimeSpan.FromSeconds(lisServiceConfig.Timeout.Value);
                 }
 
                 // 添加认证头（如果配置了）
-                if (!string.IsNullOrEmpty(loginServiceConfig.ApiKey))
+                if (!string.IsNullOrEmpty(lisServiceConfig.ApiKey))
                 {
-                    httpClient.DefaultRequestHeaders.Add("X-API-Key", loginServiceConfig.ApiKey);
+                    httpClient.DefaultRequestHeaders.Add("X-API-Key", lisServiceConfig.ApiKey);
                 }
-                else if (!string.IsNullOrEmpty(loginServiceConfig.Username) && !string.IsNullOrEmpty(loginServiceConfig.EncryptedPassword))
+                else if (!string.IsNullOrEmpty(lisServiceConfig.Username) && !string.IsNullOrEmpty(lisServiceConfig.EncryptedPassword))
                 {
-                    var basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{loginServiceConfig.Username}:{loginServiceConfig.EncryptedPassword}"));
+                    var basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{lisServiceConfig.Username}:{lisServiceConfig.EncryptedPassword}"));
                     httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {basicAuth}");
                 }
 
                 // 6. 发送请求（支持重试）
                 HttpResponseMessage? response = null;
-                int retryCount = loginServiceConfig.RetryCount ?? 0;
+                int retryCount = lisServiceConfig.RetryCount ?? 0;
                 
                 for (int i = 0; i <= retryCount; i++)
                 {
@@ -138,15 +143,23 @@ namespace LisReportServer.Services
 
                 if (loginResponse == null || string.IsNullOrEmpty(loginResponse.AccessToken))
                 {
-                    _logger.LogError("第三方登录响应格式错误: {Response}", responseContent);
+                    _logger.LogError("LIS登录响应格式错误: {Response}", responseContent);
                     return new ThirdPartyLoginResult
                     {
                         Success = false,
-                        ErrorMessage = "第三方登录响应格式错误"
+                        ErrorMessage = "LIS登录响应格式错误"
                     };
                 }
 
-                _logger.LogInformation("第三方用户 {Username} 通过医院 {HospitalName} 登录成功", username, hospitalName);
+                // 9. 将Token存储到缓存中（默认30分钟过期）
+                await _tokenCacheService.SetTokenAsync(
+                    hospitalName, 
+                    username, 
+                    loginResponse.AccessToken, 
+                    loginResponse.RefreshToken, 
+                    expirationMinutes: 30);
+
+                _logger.LogInformation("LIS用户 {Username} 通过医院 {HospitalName} 登录成功，Token已缓存", username, hospitalName);
                 return new ThirdPartyLoginResult
                 {
                     Success = true,
@@ -165,6 +178,17 @@ namespace LisReportServer.Services
             }
         }
 
+        public async Task ClearUserTokenAsync(string hospitalName, string username)
+        {
+            await _tokenCacheService.RemoveTokenAsync(hospitalName, username);
+            _logger.LogInformation("已清除用户Token缓存: 医院={HospitalName}, 用户={Username}", hospitalName, username);
+        }
+
+        public async Task<LisTokenInfo?> GetUserTokenAsync(string hospitalName, string username)
+        {
+            return await _tokenCacheService.GetTokenAsync(hospitalName, username);
+        }
+
         public async Task<bool> TestConnectionAsync(string hospitalName)
         {
             try
@@ -175,24 +199,26 @@ namespace LisReportServer.Services
                     return false;
                 }
 
-                var loginServiceConfig = await _serviceConfigService.GetByDiscoveryKeyAsync(hospital.Id, "LoginSystem");
-                if (loginServiceConfig == null)
+                var lisServiceConfig = await _serviceConfigService.GetByCategoryAsync(ServiceCategory.LIS)
+                    .ContinueWith(t => t.Result.FirstOrDefault(s => s.HospitalProfileId == hospital.Id && s.IsActive));
+                
+                if (lisServiceConfig == null)
                 {
                     return false;
                 }
 
                 // 如果配置了健康检查URL，则测试健康检查
-                if (!string.IsNullOrEmpty(loginServiceConfig.HealthCheckUrl))
+                if (!string.IsNullOrEmpty(lisServiceConfig.HealthCheckUrl))
                 {
                     var httpClient = _httpClientFactory.CreateClient();
                     httpClient.Timeout = TimeSpan.FromSeconds(5);
                     
-                    var response = await httpClient.GetAsync(loginServiceConfig.HealthCheckUrl);
+                    var response = await httpClient.GetAsync(lisServiceConfig.HealthCheckUrl);
                     return response.IsSuccessStatusCode;
                 }
 
                 // 否则尝试连接主服务地址
-                string apiUrl = BuildApiUrl(loginServiceConfig);
+                string apiUrl = BuildApiUrl(lisServiceConfig);
                 var testClient = _httpClientFactory.CreateClient();
                 testClient.Timeout = TimeSpan.FromSeconds(5);
                 
