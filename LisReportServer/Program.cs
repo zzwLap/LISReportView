@@ -58,6 +58,9 @@ builder.Services.AddScoped<IHospitalProfileService, HospitalProfileService>();
 // 添加医院服务配置服务
 builder.Services.AddScoped<IHospitalServiceConfigService, HospitalServiceConfigService>();
 
+// 添加第三方登录服务
+builder.Services.AddScoped<IThirdPartyLoginService, ThirdPartyLoginService>();
+
 // 添加健康检查服务
 builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
 

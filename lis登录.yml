@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: 登录接口
+  version: 1.0.0
+paths:
+  /api/auth/LoginSystem:
+    post:
+      summary: 用户登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - UserName
+                - Password
+              properties:
+                UserName:
+                  type: string
+                  description: 用户名
+                Password:
+                  type: string
+                  description: 密码
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  AccessToken:
+                    type: string
+                    description: 访问令牌
+                  RefreshToken:
+                    type: string
+                    description: 刷新令牌

@@ -10,15 +10,18 @@ namespace LisReportServer.Pages
     {
         private readonly ICookieService _cookieService;
         private readonly IUserAuthenticationService _userAuthenticationService;
+        private readonly IThirdPartyLoginService _thirdPartyLoginService;
         private readonly ILogger<LoginModel> _logger;
 
         public LoginModel(
             ICookieService cookieService,
             IUserAuthenticationService userAuthenticationService,
+            IThirdPartyLoginService thirdPartyLoginService,
             ILogger<LoginModel> logger)
         {
             _cookieService = cookieService;
             _userAuthenticationService = userAuthenticationService;
+            _thirdPartyLoginService = thirdPartyLoginService;
             _logger = logger;
         }
 
@@ -111,18 +114,28 @@ namespace LisReportServer.Pages
                 }
                 else
                 {
-                    // 使用第三方验证服务（暂时保留原有逻辑）
-                    isValidUser = await ValidateUserAsync(Input.HospitalName, Input.Username, Input.Password);
+                    // 使用第三方验证服务
+                    var thirdPartyResult = await _thirdPartyLoginService.AuthenticateAsync(
+                        Input.HospitalName, 
+                        Input.Username, 
+                        Input.Password);
                     
-                    if (isValidUser)
+                    if (thirdPartyResult.Success)
                     {
+                        isValidUser = true;
                         // 第三方验证成功，默认给予普通用户权限
                         userRoles.Add("User");
                         _logger.LogInformation("第三方用户 {Username} 登录成功，医院: {HospitalName}", Input.Username, Input.HospitalName);
+                        
+                        // 可以将AccessToken和RefreshToken存储到Claims中，供后续使用
+                        // 这些Token可以用于调用第三方API
                     }
                     else
                     {
-                        _logger.LogWarning("第三方用户 {Username} 登录失败，医院: {HospitalName}", Input.Username, Input.HospitalName);
+                        isValidUser = false;
+                        _logger.LogWarning("第三方用户 {Username} 登录失败，医院: {HospitalName}, 错误: {Error}", 
+                            Input.Username, Input.HospitalName, thirdPartyResult.ErrorMessage);
+                        ModelState.AddModelError(string.Empty, thirdPartyResult.ErrorMessage ?? "第三方登录失败。");
                     }
                 }
 
@@ -179,33 +192,6 @@ namespace LisReportServer.Pages
 
             // 如果到达这里，则有错误，重新显示表单
             return Page();
-        }
-
-        private async Task<bool> ValidateUserAsync(string hospitalName, string username, string password)
-        {
-            // 模拟用户验证逻辑
-            // 在实际应用中，这里应该查询数据库或调用认证服务
-            await Task.Delay(100); // 模拟异步操作延迟
-
-            // 示例验证：允许任意医院名称，但用户名必须是预设的有效用户，密码对应
-            // 实际应用中应替换为真实的身份验证逻辑
-            if (username == "admin" && password == "password")
-            {
-                return true;
-            }
-            
-            // 添加更多示例用户
-            if (username == "doctor" && password == "doc123")
-            {
-                return true;
-            }
-            
-            if (username == "nurse" && password == "nurse456")
-            {
-                return true;
-            }
-            
-            return false;
         }
     }
 }
