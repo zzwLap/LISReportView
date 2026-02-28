@@ -60,7 +60,7 @@ namespace LisReportServer.Services
                 }
 
                 // 3. 构建请求URL
-                string apiUrl = BuildApiUrl(lisServiceConfig);
+                string apiUrl = BuildApiUrl(lisServiceConfig, "/api/auth/LoginSystem");
                 _logger.LogInformation("调用LIS登录API: {Url}", apiUrl);
 
                 // 4. 构建请求体
@@ -218,7 +218,7 @@ namespace LisReportServer.Services
                 }
 
                 // 否则尝试连接主服务地址
-                string apiUrl = BuildApiUrl(lisServiceConfig);
+                string apiUrl = BuildApiUrl(lisServiceConfig, "/api/auth/LoginSystem");
                 var testClient = _httpClientFactory.CreateClient();
                 testClient.Timeout = TimeSpan.FromSeconds(5);
                 
@@ -235,7 +235,10 @@ namespace LisReportServer.Services
         /// <summary>
         /// 构建API URL
         /// </summary>
-        private string BuildApiUrl(HospitalServiceConfig config)
+        /// <param name="config">服务配置</param>
+        /// <param name="apiPath">API路径，例如：/api/auth/LoginSystem</param>
+        /// <returns>完整的API URL</returns>
+        private string BuildApiUrl(HospitalServiceConfig config, string apiPath)
         {
             var baseUrl = config.ServiceAddress.TrimEnd('/');
             
@@ -246,11 +249,11 @@ namespace LisReportServer.Services
                 baseUrl = $"{uri.Scheme}://{uri.Host}:{config.ServicePort}{uri.PathAndQuery}";
             }
 
-            // 添加网关前缀：/gateway/{ServiceName}
-            // ServiceName 来自配置中的服务名称
-            if (!string.IsNullOrEmpty(config.ServiceName))
+            // 添加网关前缀：/gateway/{ServiceDiscoveryKey}
+            // ServiceDiscoveryKey 用于网关路由识别
+            if (!string.IsNullOrEmpty(config.ServiceDiscoveryKey))
             {
-                baseUrl = $"{baseUrl}/gateway/{config.ServiceName}";
+                baseUrl = $"{baseUrl}/gateway/{config.ServiceDiscoveryKey}";
             }
 
             // 添加API版本（如果有）
@@ -259,10 +262,8 @@ namespace LisReportServer.Services
                 baseUrl = $"{baseUrl}/{config.ApiVersion}";
             }
 
-            // 添加登录端点路径
-            // 根据ServiceDiscoveryKey，构建完整的API路径
-            // 例如：LoginSystem -> /api/auth/LoginSystem
-            baseUrl = $"{baseUrl}/api/auth/{config.ServiceDiscoveryKey}";
+            // 添加实际的API路径
+            baseUrl = $"{baseUrl}{apiPath}";
 
             // 清理可能的双斜杠（但保留协议中的 ://）
             baseUrl = System.Text.RegularExpressions.Regex.Replace(baseUrl, "(?<!:)//+", "/");
